@@ -131,6 +131,7 @@ namespace NetworkUtil
                     s.ErrorOccured = true;
                     s.ErrorMessage = "The hostname you entered could not be found";
                     toCall(s);
+                    //Don't forget to check piazza for timeout error.
                 }
             }
 
@@ -165,7 +166,12 @@ namespace NetworkUtil
         /// <param name="ar">The object asynchronously passed via BeginConnect</param>
         private static void ConnectedCallback(IAsyncResult ar)
         {
-            throw new NotImplementedException();
+            SocketState state = (SocketState)ar.AsyncState;
+            state.TheSocket.EndConnect(ar);
+            //Don't forget to check piazza for timeout error.
+            GetData(state);
+            //Fill out the string property
+            Send(state.TheSocket, "What the user writes goes here.");
         }
 
 
@@ -187,7 +193,9 @@ namespace NetworkUtil
         /// <param name="state">The SocketState to begin receiving</param>
         public static void GetData(SocketState state)
         {
-            throw new NotImplementedException();
+            state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+
+
         }
 
         /// <summary>
@@ -209,7 +217,18 @@ namespace NetworkUtil
         /// </param>
         private static void ReceiveCallback(IAsyncResult ar)
         {
-            throw new NotImplementedException();
+            //makes a new SocketState and finalizes recieve
+            SocketState state = (SocketState)ar.AsyncState;
+            state.TheSocket.EndReceive(ar);
+            //create a string from the buffer and appends it to the string builder.
+            String x = Encoding.UTF8.GetString(state.buffer);
+            state.data.Append(x);
+            //once it finds a new line it passes the message to the user.
+            if (x.EndsWith("\n"))
+            {
+                state.OnNetworkAction(state);
+            }
+            GetData(state);
         }
 
         /// <summary>
