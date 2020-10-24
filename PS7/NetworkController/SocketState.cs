@@ -1,4 +1,4 @@
-﻿u// Author: Daniel Kopta, May 2019
+﻿// Author: Daniel Kopta, May 2019
 // SocketState for CS 3500 networking library (part of final project)
 // University of Utah
 

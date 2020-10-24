@@ -21,7 +21,14 @@ namespace NetworkUtil
         /// <param name="port">The the port to listen on</param>
         public static TcpListener StartServer(Action<SocketState> toCall, int port)
         {
-            throw new NotImplementedException();
+            TcpListener listener = new TcpListener(IPAddress.Any, port);
+
+            listener.Start();
+
+            
+
+           
+            return listener;
         }
 
         /// <summary>
@@ -44,7 +51,10 @@ namespace NetworkUtil
         /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
         private static void AcceptNewClient(IAsyncResult ar)
         {
-            throw new NotImplementedException();
+            //Make a SocketState object
+            SocketState state = new SocketState(toCall, );
+            Socket s = 
+
         }
 
         /// <summary>
@@ -99,7 +109,12 @@ namespace NetworkUtil
                 // Didn't find any IPV4 addresses
                 if (!foundIPV4)
                 {
-                    // TODO: Indicate an error to the user, as specified in the documentation
+                    //Create a new SocketState, mark it as an error, and invoke its toCall method
+                    SocketState s = new SocketState(toCall, new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+                    s.ErrorOccured = true;
+                    s.ErrorMessage = "The IPV4 address you entered could not be found";
+                    toCall(s);
+                    
                 }
             }
             catch (Exception)
@@ -111,7 +126,11 @@ namespace NetworkUtil
                 }
                 catch (Exception)
                 {
-                    // TODO: Indicate an error to the user, as specified in the documentation
+                    //Create a new SocketState, mark it as an error, and invoke its toCall method
+                    SocketState s = new SocketState(toCall, new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp));
+                    s.ErrorOccured = true;
+                    s.ErrorMessage = "The hostname you entered could not be found";
+                    toCall(s);
                 }
             }
 
@@ -123,7 +142,12 @@ namespace NetworkUtil
             // game like ours will be 
             socket.NoDelay = true;
 
-            // TODO: Finish the remainder of the connection process as specified.
+            //Create a new SocketState object to pass to the callback method
+            SocketState state = new SocketState(toCall, socket);
+
+            //Begin the connection
+            state.TheSocket.BeginConnect(ipAddress, port, ConnectedCallback, state);
+
         }
 
         /// <summary>
