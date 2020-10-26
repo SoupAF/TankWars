@@ -25,9 +25,14 @@ namespace NetworkUtil
 
             listener.Start();
 
-            
+            //Tuple<Action<SocketState>, TcpListener> args = new Tuple<Action<SocketState>, TcpListener>(toCall, listener);
 
-           
+            //Start the event loop to add new clients
+            listener.BeginAcceptSocket(AcceptNewClient, Tuple.Create(toCall, listener));
+
+
+
+
             return listener;
         }
 
@@ -51,9 +56,31 @@ namespace NetworkUtil
         /// 1) a delegate so the user can take action (a SocketState Action), and 2) the TcpListener</param>
         private static void AcceptNewClient(IAsyncResult ar)
         {
-            //Make a SocketState object
-            SocketState state = new SocketState(toCall, );
-            Socket s = 
+
+            try
+            {
+                //Finalize the connection and create a socket to represent it
+                Tuple<Action<SocketState>, TcpListener> args = (Tuple<Action<SocketState>, TcpListener>)ar.AsyncState;
+                Socket s = args.Item2.EndAcceptSocket(ar);
+
+
+
+
+                //Make a SocketState object
+                SocketState state = new SocketState(args.Item1, s);
+                state.OnNetworkAction(state);
+
+                if (state.ErrorOccured)
+                    return;
+
+                //Start the event loop for getting data
+                //GetData(state);
+
+                //Contine the AcceptNewClient event loop
+                args.Item2.BeginAcceptSocket(AcceptNewClient, args);
+            }
+            catch (System.ObjectDisposedException)
+            { }
 
         }
 
@@ -62,7 +89,7 @@ namespace NetworkUtil
         /// </summary>
         public static void StopServer(TcpListener listener)
         {
-            throw new NotImplementedException();
+            listener.Stop();
         }
 
         /////////////////////////////////////////////////////////////////////////////////////////
@@ -114,7 +141,7 @@ namespace NetworkUtil
                     s.ErrorOccured = true;
                     s.ErrorMessage = "The IPV4 address you entered could not be found";
                     toCall(s);
-                    
+
                 }
             }
             catch (Exception)
@@ -146,10 +173,21 @@ namespace NetworkUtil
             //Create a new SocketState object to pass to the callback method
             SocketState state = new SocketState(toCall, socket);
 
-            //Begin the connection
-            state.TheSocket.BeginConnect(ipAddress, port, ConnectedCallback, state);
 
-        }
+
+            //Begin the connection
+            IAsyncResult result = state.TheSocket.BeginConnect(ipAddress, port, ConnectedCallback, state);
+
+            if(!result.AsyncWaitHandle.WaitOne(3000, true))
+            {
+                socket.Close();
+                state.ErrorOccured = true;
+                state.ErrorMessage = "failed to connect on timeout";
+                state.OnNetworkAction(state);
+            }
+            
+
+         }
 
         /// <summary>
         /// To be used as the callback for finalizing a connection process that was initiated by ConnectToServer.
@@ -166,12 +204,28 @@ namespace NetworkUtil
         /// <param name="ar">The object asynchronously passed via BeginConnect</param>
         private static void ConnectedCallback(IAsyncResult ar)
         {
-            SocketState state = (SocketState)ar.AsyncState;
-            state.TheSocket.EndConnect(ar);
+            try
+            {
+                SocketState state = (SocketState)ar.AsyncState;
+                state.TheSocket.EndConnect(ar);
+                state.OnNetworkAction(state);
+            }
+            catch (Exception)
+            {
+                SocketState state = (SocketState)ar.AsyncState;
+                state.ErrorMessage = "No server was found at the specified address";
+                state.ErrorOccured = true;
+                state.OnNetworkAction(state);
+
+            }
+
+
+
+
             //Don't forget to check piazza for timeout error.
-            GetData(state);
+            //GetData(state);
             //Fill out the string property
-            Send(state.TheSocket, "What the user writes goes here.");
+            //Send(state.TheSocket, "What the user writes goes here.");
         }
 
 
@@ -193,8 +247,15 @@ namespace NetworkUtil
         /// <param name="state">The SocketState to begin receiving</param>
         public static void GetData(SocketState state)
         {
-            state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
+            if (state.TheSocket.Connected)
+                state.TheSocket.BeginReceive(state.buffer, 0, state.buffer.Length, SocketFlags.None, ReceiveCallback, state);
 
+            else
+            {
+                state.ErrorMessage = "The socket was disconnected";
+                state.ErrorOccured = true;
+                state.OnNetworkAction(state);
+            }
 
         }
 
@@ -217,18 +278,36 @@ namespace NetworkUtil
         /// </param>
         private static void ReceiveCallback(IAsyncResult ar)
         {
+
+
             //makes a new SocketState and finalizes recieve
             SocketState state = (SocketState)ar.AsyncState;
-            state.TheSocket.EndReceive(ar);
-            //create a string from the buffer and appends it to the string builder.
-            String x = Encoding.UTF8.GetString(state.buffer);
-            state.data.Append(x);
-            //once it finds a new line it passes the message to the user.
-            if (x.EndsWith("\n"))
+
+
+            if (state.TheSocket.Connected)
             {
-                state.OnNetworkAction(state);
+                //lock(state)
+                state.TheSocket.EndReceive(ar);
+
+                //create a string from the buffer and appends it to the string builder.
+                String s = Encoding.UTF8.GetString(state.buffer);
+
+                int endof = s.IndexOf("\n");
+                if (endof != -1)
+                {
+                    s = s.Substring(0, endof);
+                    lock(state.data)
+                        state.data.Append(s);
+                    state.OnNetworkAction(state);
+                }
+                else
+                {
+                    lock(state.data)
+                        state.data.Append(s);
+                    GetData(state);
+                }
             }
-            GetData(state);
+
         }
 
         /// <summary>
@@ -243,7 +322,24 @@ namespace NetworkUtil
         /// <returns>True if the send process was started, false if an error occurs or the socket is already closed</returns>
         public static bool Send(Socket socket, string data)
         {
-            throw new NotImplementedException();
+            //End the sending process if the socket is closed
+            //if (!socket.Connected)
+            //   return false;
+
+            data += "\n";
+            //Convert the data string to a byte array
+            byte[] buffer = Encoding.UTF8.GetBytes(data);
+
+            //Begin to send the data using the provided socket
+            try
+            {
+                socket.BeginSend(buffer, 0, buffer.Length, SocketFlags.None, SendCallback, socket);
+            }
+            catch (System.Net.Sockets.SocketException)
+            {
+                return false;
+            }
+            return true;
         }
 
         /// <summary>
@@ -259,7 +355,8 @@ namespace NetworkUtil
         /// </param>
         private static void SendCallback(IAsyncResult ar)
         {
-            throw new NotImplementedException();
+            Socket s = (Socket)ar.AsyncState;
+            s.EndSend(ar);
         }
 
 
