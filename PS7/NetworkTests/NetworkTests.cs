@@ -470,6 +470,46 @@ namespace NetworkUtil
 
 
         //TODO: Add more of your own tests here
+        [DataRow(true)]
+        [DataRow(false)]
+        [DataTestMethod]
+        public void TestSendandClose(bool clientSide)
+        {
+            SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+            Networking.SendAndClose(testLocalSocketState.TheSocket, "a");
+            Assert.IsFalse(testLocalSocketState.TheSocket.Connected);
+        }
+
+        [DataRow(true)]
+        [DataRow(false)]
+        [DataTestMethod]
+        public void TestSendandCloseFail(bool clientSide)
+        {
+            SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+
+            testLocalSocketState.TheSocket.Shutdown(SocketShutdown.Both);
+            Assert.IsFalse(Networking.SendAndClose(testLocalSocketState.TheSocket, "a"));
+        }
+
+        [TestMethod]
+        public void TcpStopServer()
+        {
+            SetupTestConnections(true, out testListener, out testLocalSocketState, out testRemoteSocketState);
+            Networking.StopServer(testListener);
+            Assert.IsFalse(testListener.Server.Connected);
+        }
+
+        [DataRow(true)]
+        [DataRow(false)]
+        [DataTestMethod]
+        public void TestGetDataFail(bool clientSide)
+        {
+            SetupTestConnections(clientSide, out testListener, out testLocalSocketState, out testRemoteSocketState);
+
+            testRemoteSocketState.TheSocket.Shutdown(SocketShutdown.Both);
+            Networking.GetData(testRemoteSocketState);
+            Assert.IsTrue(testRemoteSocketState.ErrorOccured);
+        }
 
     }
 }
