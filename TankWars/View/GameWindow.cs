@@ -10,9 +10,9 @@ using System.Windows.Forms;
 
 namespace View
 {
-    public partial class View : Form
+    public partial class GameWindow : Form
     {
-        public View()
+        public GameWindow()
         {
             InitializeComponent();
         }
