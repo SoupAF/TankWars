@@ -9,6 +9,7 @@
   </ItemGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Models\Models.csproj" />
     <ProjectReference Include="..\NetworkController\NetworkController.csproj" />
   </ItemGroup>
 

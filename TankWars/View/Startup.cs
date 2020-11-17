@@ -7,7 +7,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
-using GameController;
+//using GameController;
 
 namespace View
 {
@@ -20,11 +20,11 @@ namespace View
 
         private GameController.GameController control;
 
-        public Startup()
+        public Startup(GameController.GameController controller)
         {
                        
             InitializeComponent();
-            control = new GameController.GameController();
+            control = controller;
             tryConnect += control.StartConnectionHandler;
         }
 

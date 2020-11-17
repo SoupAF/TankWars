@@ -3,16 +3,21 @@ using System;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Windows.Forms;
-
+using TankWars;
 
 namespace View
 {
     public partial class DrawingPanel : UserControl
     {
         private World theWorld;
+        private Image background;
+        private Image wall;
         public DrawingPanel()
         {
             DoubleBuffered = true;
+            background = Image.FromFile("..\\..\\..\\Resources\\Images\\Background.png");
+            wall = Image.FromFile("..\\..\\..\\Resources\\Images\\WallSprite.png");
+            theWorld = new World(2000);
             //theWorld = w;
         }
 
@@ -57,22 +62,35 @@ namespace View
             e.Graphics.Transform = oldMatrix;
         }
 
-        private void background(object o, PaintEventArgs e)
+        public void UpdateWorld(World w)
         {
-            Image backgound = Image.FromFile("Resources/Images/Background.png");
+            theWorld = w;
+            //Remove this line later
+           
+        }
+
+        private void BackgroundDrawer(object o, PaintEventArgs e)
+        {
+            
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.DrawImage(background, new Point(0, 0));
+            //Replace 2000 with world size
+            e.Graphics.DrawImage(background, 0, 0, theWorld.GetSize(), theWorld.GetSize());
         }
 
         private void WallDrawer(object o, PaintEventArgs e)
         {
             Wall w = o as Wall;
-
+            Vector2D test = w.Corner1;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.DrawImage
+            e.Graphics.DrawImage(wall, (float)w.Corner1.GetX(), (float)w.Corner1.GetY(), (float)w.Corner2.GetX() - (float)w.Corner1.GetX(), (float)w.Corner2.GetY() - (float)w.Corner1.GetY());
+           // e.Graphics.DrawImage
 
         }
             
+        private void PlayerDrawer(object o, PaintEventArgs e)
+        {
+
+        }
         /*
         private void PlayerDrawer(object o, PaintEventArgs e)
         {
@@ -129,10 +147,11 @@ namespace View
          // This method is invoked when the DrawingPanel needs to be re-drawn
          protected override void OnPaint(PaintEventArgs e)
          {
-            /*
-             // Draw the players
-             lock (theWorld)
+            DrawObjectWithTransform(e, background, theWorld.GetSize(), -1000, -1000, 0, BackgroundDrawer);
+            // Draw the players
+            lock (theWorld)
              {
+                /*
                  foreach (Player play in theWorld.players.Values)
                  {
                      DrawObjectWithTransform(e, play, theWorld.GetSize(), play.GetLocation().GetX(), play.GetLocation().GetY(), play.GetOrientation().ToAngle(), ShapeDrawer);
@@ -143,8 +162,12 @@ namespace View
                  {
                      DrawObjectWithTransform(e, pow, theWorld.GetSize(), pow.GetLocation().GetX(), pow.GetLocation().GetY(), 0, PowerupDrawer);
                  }
+                */
+                 foreach(Wall wall in theWorld.Getwalls())
+                {
+                    DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX(), wall.Corner1.GetY(), 0, WallDrawer);
+                }
              }
-            */
 
 
 

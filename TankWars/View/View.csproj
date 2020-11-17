@@ -93,6 +93,10 @@
     <None Include="App.config" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\DrawingPanel\DrawingPanel.csproj">
+      <Project>{0F52463C-D211-40D5-8103-A5BFF4E5B283}</Project>
+      <Name>DrawingPanel</Name>
+    </ProjectReference>
     <ProjectReference Include="..\GameController\GameController.csproj">
       <Project>{a57d97fc-07f2-4bb3-a543-301accc77679}</Project>
       <Name>GameController</Name>

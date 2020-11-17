@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 
@@ -16,7 +17,22 @@ namespace View
         {
             Application.EnableVisualStyles();
             Application.SetCompatibleTextRenderingDefault(false);
-            Application.Run(new Startup());
+
+
+            GameController.GameController controller = new GameController.GameController();
+            GameWindow gameWindow = new GameWindow(controller);
+            Thread GameThread = new Thread(() => Application.Run(gameWindow));
+            GameThread.Start();
+
+            Application.Run(new Startup(controller));
+            
+            
+            GameWindow.ActiveForm.Hide();
+
         }
+
     }
+
+       
 }
+

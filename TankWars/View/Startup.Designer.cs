@@ -53,6 +53,7 @@
             this.AddressBox.Name = "AddressBox";
             this.AddressBox.Size = new System.Drawing.Size(100, 20);
             this.AddressBox.TabIndex = 1;
+            this.AddressBox.Text = "tankwars.eng.utah.edu";
             // 
             // NameBox
             // 
