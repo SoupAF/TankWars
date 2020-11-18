@@ -14,6 +14,11 @@ namespace Models
         private Dictionary<int, Wall> walls;
         private Dictionary<int, Projectile> bullets;
         private Dictionary<int, Beam> beams;
+        private Dictionary<int, string> colors;
+
+        private Tank player;
+        private int colorCounter;
+        private int playerID;
 
         public World(int size)
         {
@@ -23,6 +28,9 @@ namespace Models
             walls = new Dictionary<int, Wall>();
             bullets = new Dictionary<int, Projectile>();
             beams = new Dictionary<int, Beam>();
+            colors = new Dictionary<int, string>();
+            colorCounter = 1;
+            player = new Tank("default", -1);
         }
 
         public int GetSize()
@@ -30,11 +38,57 @@ namespace Models
             return size;
         }
 
+        public void ClearWorld()
+        {
+            tanks.Clear();
+            bullets.Clear();
+            beams.Clear();
+            powerups.Clear();
+        }
+
         public int AddPlayer(Tank play)
         {
-            tanks.Add(play.GetID(), play);
+            try { tanks.Add(play.GetID(), play); }
+            catch (Exception) { }
+
+
+            if (!colors.ContainsKey(play.GetID()))
+            {
+                if (colorCounter % 8 == 1)
+                    colors.Add(play.GetID(), "blue");
+
+                else if (colorCounter % 8 == 2)
+                    colors.Add(play.GetID(), "dark");
+
+                else if (colorCounter % 8 == 3)
+                    colors.Add(play.GetID(), "green");
+
+                else if (colorCounter % 8 == 4)
+                    colors.Add(play.GetID(), "lightgreen");
+
+                else if (colorCounter % 8 == 5)
+                    colors.Add(play.GetID(), "orange");
+
+                else if (colorCounter % 8 == 6)
+                    colors.Add(play.GetID(), "purple");
+
+                else if (colorCounter % 8 == 7)
+                    colors.Add(play.GetID(), "red");
+
+                else colors.Add(play.GetID(), "yellow");
+
+                colorCounter++;
+            }
+
             return play.GetID();
         }
+
+        public string GetTankColor(int id)
+        {
+            colors.TryGetValue(id, out string color);
+            return color;
+        }
+
 
         public int AddWall(Wall wall)
         {
@@ -64,6 +118,32 @@ namespace Models
         {
             return walls.Values;
         }
+
+        public void SetMainPlayer(Tank t)
+        {
+            player = t;
+        }
+
+        public Tank GetMainPlayer()
+        {
+            return player;
+        }
+
+        public int GetMainPlayerID()
+        {
+            return playerID;
+        }
+
+        public void SetPlayerID(int id) 
+        {
+            playerID = id;
+        }
+
+        public IEnumerable<Tank> GetTanks() 
+        {
+            return tanks.Values;
+        }
+        
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -81,9 +161,13 @@ namespace Models
         private Vector2D tdir;
         [JsonProperty(PropertyName = "score")]
         private int score;
+        [JsonProperty(PropertyName = "hp")]
         private int hp;
+        [JsonProperty(PropertyName = "died")]
         private bool died;
+        [JsonProperty(PropertyName = "dc")]
         private bool dc;
+        [JsonProperty(PropertyName = "joined")]
         private bool joined;
 
         public Tank(string Name, int ID)
@@ -95,6 +179,14 @@ namespace Models
             died = false;
             dc = false;
             joined = true;
+
+            if (ID == -1) 
+            {
+                loc = new Vector2D(0,0);
+                bdir = new Vector2D(0, 0);
+                tdir = new Vector2D(0, 0);
+            }
+
         }
 
         public int GetID()
@@ -102,13 +194,22 @@ namespace Models
             return tank;
         }
 
+        public Vector2D GetLoc()
+        {
+            return loc;
+        }
+
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
     public class Powerup
     {
+        [JsonProperty(PropertyName = "power")]
         private int power;
+        [JsonProperty(PropertyName = "loc")]
         private Vector2D loc;
+        [JsonProperty(PropertyName = "died")]
         private bool died;
 
         public int GetID()

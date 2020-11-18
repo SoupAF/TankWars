@@ -1,4 +1,5 @@
 ﻿using Models;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.Drawing;
@@ -12,11 +13,32 @@ namespace View
         private World theWorld;
         private Image background;
         private Image wall;
+        private Image BluePlayer;
+        private Image DarkPlayer;
+        private Image GreenPlayer;
+        private Image LightGreenPlayer;
+        private Image OrangePlayer;
+        private Image PurplePlayer;
+        private Image RedPlayer;
+        private Image YellowPlayer;
+
+
         public DrawingPanel()
         {
             DoubleBuffered = true;
             background = Image.FromFile("..\\..\\..\\Resources\\Images\\Background.png");
             wall = Image.FromFile("..\\..\\..\\Resources\\Images\\WallSprite.png");
+            BluePlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\BlueTank.png");
+            DarkPlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\DarkTank.png");
+            GreenPlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\GreenTank.png");
+            LightGreenPlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\LightGreenTank.png");
+            OrangePlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\OrangeTank.png");
+            PurplePlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\PurpleTank.png");
+            RedPlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\RedTank.png");
+            YellowPlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\YellowTank.png");
+
+
+
             theWorld = new World(2000);
             //theWorld = w;
         }
@@ -66,12 +88,12 @@ namespace View
         {
             theWorld = w;
             //Remove this line later
-           
+
         }
 
         private void BackgroundDrawer(object o, PaintEventArgs e)
         {
-            
+
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
             //Replace 2000 with world size
             e.Graphics.DrawImage(background, 0, 0, theWorld.GetSize(), theWorld.GetSize());
@@ -80,102 +102,100 @@ namespace View
         private void WallDrawer(object o, PaintEventArgs e)
         {
             Wall w = o as Wall;
-            Vector2D test = w.Corner1;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            e.Graphics.DrawImage(wall, (float)w.Corner1.GetX(), (float)w.Corner1.GetY(), (float)w.Corner2.GetX() - (float)w.Corner1.GetX(), (float)w.Corner2.GetY() - (float)w.Corner1.GetY());
-           // e.Graphics.DrawImage
+            e.Graphics.DrawImage(wall, 0, 0, (float)w.Corner2.GetX() - (float)w.Corner1.GetX(), (float)w.Corner2.GetY() - (float)w.Corner1.GetY());
+
 
         }
+
+        private void TankDrawer(object o, PaintEventArgs e)
+        {
+            Tank t = o as Tank;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+            int id = t.GetID();
+            string color = theWorld.GetTankColor(id);
+            Vector2D loc = t.GetLoc();
+
+
+            Image toDraw;
+
+            if (color == "blue")
+                toDraw = BluePlayer;
+
+            else if (color == "dark")
+                toDraw = DarkPlayer;
+
+            else if (color == "green")
+                toDraw = GreenPlayer;
+
+            else if (color == "lightgreen")
+                toDraw = LightGreenPlayer;
+
+            else if (color == "orange")
+                toDraw = OrangePlayer;
+
+            else if (color == "purple")
+                toDraw = PurplePlayer;
+
+            else if (color == "red")
+                toDraw = RedPlayer;
+
+            else toDraw = YellowPlayer;
+
+            e.Graphics.DrawImage(toDraw, 0, 0, 64, 64);
+
+        }
+
+        // This method is invoked when the DrawingPanel needs to be re-drawn
+        protected override void OnPaint(PaintEventArgs e)
+        {
+            Tank player = theWorld.GetMainPlayer();
+            Vector2D loc = player.GetLoc();
+            double playerX = loc.GetX();
+            double playerY = loc.GetY();
+
             
-        private void PlayerDrawer(object o, PaintEventArgs e)
-        {
+            // calculate view/world size ratio
+            double ratio = (double)900 / (double)theWorld.GetSize();
+            int halfSizeScaled = (int)(theWorld.GetSize() / 2.0 * ratio);
 
-        }
-        /*
-        private void PlayerDrawer(object o, PaintEventArgs e)
-        {
-            Player p = o as Player;
+            double inverseTranslateX = -WorldSpaceToImageSpace(theWorld.GetSize(), playerX) + halfSizeScaled;
+            double inverseTranslateY = -WorldSpaceToImageSpace(theWorld.GetSize(), playerY) + halfSizeScaled;
+            
+            e.Graphics.TranslateTransform((float)inverseTranslateX, (float)inverseTranslateY);
 
-            int width = 10;
-            int height = 10;
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using (System.Drawing.SolidBrush blueBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Blue))
-            using (System.Drawing.SolidBrush greenBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Green))
-            {
-                // Rectangles are drawn starting from the top-left corner.
-                // So if we want the rectangle centered on the player's location, we have to offset it
-                // by half its size to the left (-width/2) and up (-height/2)
-                Rectangle r = new Rectangle(-(width / 2), -(height / 2), width, height);
 
-                if (p.GetTeam() == 1) // team 1 is blue
-                    e.Graphics.FillRectangle(blueBrush, r);
-                else                  // team 2 is green
-                    e.Graphics.FillRectangle(greenBrush, r);
-            }
-        }
-        */
-
-        /*
-        private void PowerupDrawer(object o, PaintEventArgs e)
-        {
-            Powerup p = o as Powerup;
-
-            int width = 8;
-            int height = 8;
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            using (System.Drawing.SolidBrush redBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Red))
-            using (System.Drawing.SolidBrush yellowBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Yellow))
-            using (System.Drawing.SolidBrush blackBrush = new System.Drawing.SolidBrush(System.Drawing.Color.Black))
-            {
-                // Circles are drawn starting from the top-left corner.
-                // So if we want the circle centered on the powerup's location, we have to offset it
-                // by half its size to the left (-width/2) and up (-height/2)
-                Rectangle r = new Rectangle(-(width / 2), -(height / 2), width, height);
-
-                if (p.GetKind() == 1) // red powerup
-                    e.Graphics.FillEllipse(redBrush, r);
-                if (p.GetKind() == 2) // yellow powerup
-                    e.Graphics.FillEllipse(yellowBrush, r);
-                if (p.GetKind() == 3) // black powerup
-                    e.Graphics.FillEllipse(blackBrush, r);
-            }
-        }
-        */
-
-        
-
-         // This method is invoked when the DrawingPanel needs to be re-drawn
-         protected override void OnPaint(PaintEventArgs e)
-         {
-            DrawObjectWithTransform(e, background, theWorld.GetSize(), -1000, -1000, 0, BackgroundDrawer);
+            //DrawObjectWithTransform(e, background, theWorld.GetSize(), -450, -450, 0, BackgroundDrawer);
+            e.Graphics.DrawImage(background, 0, 0, theWorld.GetSize(), theWorld.GetSize());
+           
             // Draw the players
             lock (theWorld)
-             {
-                /*
-                 foreach (Player play in theWorld.players.Values)
+            {
+                
+                 foreach (Tank t in theWorld.GetTanks())
                  {
-                     DrawObjectWithTransform(e, play, theWorld.GetSize(), play.GetLocation().GetX(), play.GetLocation().GetY(), play.GetOrientation().ToAngle(), ShapeDrawer);
+                     DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX(), t.GetLoc().GetY(), 0, TankDrawer);
                  }
-
+                 /*
                  // Draw the powerups
                  foreach (Powerup pow in theWorld.Powerups.Values)
                  {
                      DrawObjectWithTransform(e, pow, theWorld.GetSize(), pow.GetLocation().GetX(), pow.GetLocation().GetY(), 0, PowerupDrawer);
                  }
                 */
-                 foreach(Wall wall in theWorld.Getwalls())
+                foreach (Wall wall in theWorld.Getwalls())
                 {
                     DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX(), wall.Corner1.GetY(), 0, WallDrawer);
                 }
-             }
+            }
 
 
 
 
-             // Do anything that Panel (from which we inherit) needs to do
-             base.OnPaint(e);
-         }
-        
+            // Do anything that Panel (from which we inherit) needs to do
+            base.OnPaint(e);
+        }
+
     }
 }
 

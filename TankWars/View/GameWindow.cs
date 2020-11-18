@@ -15,7 +15,7 @@ namespace View
     {
         private GameController.GameController control;
 
-        public GameWindow(GameController.GameController controller)
+        public GameWindow( ref GameController.GameController controller)
         {
             InitializeComponent();
             control = controller;
@@ -33,7 +33,11 @@ namespace View
         public void UpdateWorld(World w)
         {
             GamePanel.UpdateWorld(w);
-            Invoke(new MethodInvoker(() => Invalidate(true)));
+            try
+            {
+                Invoke(new MethodInvoker(() => Invalidate(true)));
+            }
+            catch (Exception) { }
         }
     }
 }

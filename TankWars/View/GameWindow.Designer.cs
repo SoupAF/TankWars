@@ -44,7 +44,7 @@
             // 
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(902, 896);
+            this.ClientSize = new System.Drawing.Size(902, 920);
             this.Controls.Add(this.GamePanel);
             this.Name = "GameWindow";
             this.Text = " Tank Wars!";

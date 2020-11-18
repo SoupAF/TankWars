@@ -20,7 +20,7 @@ namespace View
 
         private GameController.GameController control;
 
-        public Startup(GameController.GameController controller)
+        public Startup(ref GameController.GameController controller)
         {
                        
             InitializeComponent();

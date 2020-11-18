@@ -20,14 +20,14 @@ namespace View
 
 
             GameController.GameController controller = new GameController.GameController();
-            GameWindow gameWindow = new GameWindow(controller);
+            GameWindow gameWindow = new GameWindow(ref controller);
             Thread GameThread = new Thread(() => Application.Run(gameWindow));
             GameThread.Start();
 
-            Application.Run(new Startup(controller));
+            Application.Run(new Startup(ref controller));
             
             
-            GameWindow.ActiveForm.Hide();
+           // GameWindow.ActiveForm.Hide();
 
         }
 
