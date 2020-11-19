@@ -15,7 +15,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Models", "Models\Models.csp
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawingPanel", "DrawingPanel\DrawingPanel.csproj", "{0F52463C-D211-40D5-8103-A5BFF4E5B283}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Vector2D", "Vector2D\Vector2D.csproj", "{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vector2D", "Vector2D\Vector2D.csproj", "{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution

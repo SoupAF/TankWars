@@ -55,12 +55,6 @@
     <Compile Include="GameWindow.Designer.cs">
       <DependentUpon>GameWindow.cs</DependentUpon>
     </Compile>
-    <Compile Include="Startup.cs">
-      <SubType>Form</SubType>
-    </Compile>
-    <Compile Include="Startup.Designer.cs">
-      <DependentUpon>Startup.cs</DependentUpon>
-    </Compile>
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <EmbeddedResource Include="GameWindow.resx">
@@ -75,9 +69,6 @@
       <AutoGen>True</AutoGen>
       <DependentUpon>Resources.resx</DependentUpon>
     </Compile>
-    <EmbeddedResource Include="Startup.resx">
-      <DependentUpon>Startup.cs</DependentUpon>
-    </EmbeddedResource>
     <None Include="packages.config" />
     <None Include="Properties\Settings.settings">
       <Generator>SettingsSingleFileGenerator</Generator>
@@ -98,7 +89,7 @@
       <Name>DrawingPanel</Name>
     </ProjectReference>
     <ProjectReference Include="..\GameController\GameController.csproj">
-      <Project>{a57d97fc-07f2-4bb3-a543-301accc77679}</Project>
+      <Project>{A57D97FC-07F2-4BB3-A543-301ACCC77679}</Project>
       <Name>GameController</Name>
     </ProjectReference>
     <ProjectReference Include="..\Models\Models.csproj">

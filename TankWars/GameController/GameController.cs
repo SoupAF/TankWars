@@ -1,5 +1,6 @@
 ﻿using Models;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
@@ -10,21 +11,23 @@ namespace GameController
 
     public delegate void WorldUpdate(World w);
 
-
     public class GameController
     {
-        public Action<World> UpdateMethod;
+        public event WorldUpdate worldUpdate;
 
         private string playerName;
-        //private SocketState state;
         private World theWorld;
         private Tank player;
-        // private Form gameWindow;
-        // private Form Startup;
+        private Dictionary<string, List<int>> addedItems;
+
 
         public GameController()
         {
-
+            addedItems = new Dictionary<string, List<int>>();
+            addedItems.Add("Models.Tank", new List<int>());
+            addedItems.Add("Models.Powerup", new List<int>());
+            addedItems.Add("Models.Beam", new List<int>());
+            addedItems.Add("Models.Projectile", new List<int>());
         }
 
         public void StartConnectionHandler(string IpAddress, string name)
@@ -88,7 +91,7 @@ namespace GameController
                 NetworkUtil.Networking.GetData(state);
             }
 
-            else
+            else if (data.Length != 0)
             {
 
                 index = data.IndexOf('\n');
@@ -147,69 +150,91 @@ namespace GameController
         public void ServerUpdate(SocketState state)
         {
             theWorld.ClearWorld();
-
+            foreach (List<int> l in addedItems.Values)
+                l.Clear();
 
             string data = state.GetData();
-            List<string> addedItems = new List<string>();
+            int index;
+            string objectInfo;
+            JToken tank;
+            JToken power;
+            JToken beam;
+            JToken proj;
 
             while (data.Contains("\n"))
             {
-                int index = data.IndexOf('\n');
-                string objectInfo = data.Substring(0, index);
+                index = data.IndexOf('\n');
+                objectInfo = data.Substring(0, index);
                 data = data.Substring(index + 1);
 
-                if (!addedItems.Contains(objectInfo))
+                //Get the type of object 
+                JObject o = JObject.Parse(objectInfo);
+                proj = o["proj"];
+                beam = o["beam"];
+                power = o["power"];
+                tank = o["tank"];
+
+
+
+
+                if (tank != null)
                 {
-                    object o;
-                    if (objectInfo.Contains("tank"))
+                    Tank t = JsonConvert.DeserializeObject<Tank>(objectInfo);
+                    if (!theWorld.GetTankIds().Contains(t.GetID()))
                     {
-                        o = JsonConvert.DeserializeObject<Tank>(objectInfo);
-                        Tank t = o as Tank;
                         lock (theWorld)
                         {
                             if (t.GetID() == theWorld.GetMainPlayerID())
                             {
                                 theWorld.SetMainPlayer(t);
                             }
-                            addedItems.Add(objectInfo);
-                            theWorld.AddPlayer(o as Tank);
-                        }
-                    }
 
-                    else if (objectInfo.Contains("proj"))
-                    {
-                        o = JsonConvert.DeserializeObject<Projectile>(objectInfo);
-                        addedItems.Add(objectInfo);
-                        lock (theWorld)
-                        {
-                            theWorld.AddProj(o as Projectile);
-                        }
-                    }
-
-                    else if (objectInfo.Contains("beam"))
-                    {
-                        o = JsonConvert.DeserializeObject<Beam>(objectInfo);
-                        addedItems.Add(objectInfo);
-                        lock (theWorld)
-                        {
-                            theWorld.AddBeam(o as Beam);
-                        }
-                    }
-
-                    else if (objectInfo.Contains("power"))
-                    {
-                        o = JsonConvert.DeserializeObject<Powerup>(objectInfo);
-                        addedItems.Add(objectInfo);
-                        lock (theWorld)
-                        {
-                            theWorld.AddPowerup(o as Powerup);
+                            theWorld.AddPlayer(t);
                         }
                     }
                 }
+
+                else if (proj != null)
+                {
+                    Projectile p = JsonConvert.DeserializeObject<Projectile>(objectInfo);
+                    if (!theWorld.GetProjectileIds().Contains(p.GetID()))
+                    {
+                        lock (theWorld)
+                        {
+                            theWorld.AddProj(p);
+                        }
+                    }
+                }
+
+                else if (beam != null)
+                {
+                    Beam b = JsonConvert.DeserializeObject<Beam>(objectInfo);
+                    if (!theWorld.GetBeamIds().Contains(b.GetID()))
+                    {
+                        lock (theWorld)
+                        {
+                            theWorld.AddBeam(b);
+                        }
+                    }
+                }
+
+                else if (power != null)
+                {
+                    Powerup p = JsonConvert.DeserializeObject<Powerup>(objectInfo);
+                    List<Powerup> list = theWorld.GetPowerups();
+                    if (!theWorld.GetPowerupIds().Contains(p.GetID()))
+                    {
+                        lock (theWorld)
+                        {
+                            theWorld.AddPowerup(p);
+                        }
+                    }
+                }
+
             }
 
             state.ClearData();
-            UpdateMethod(theWorld);
+            worldUpdate(theWorld);
             NetworkUtil.Networking.GetData(state);
         }
 

@@ -11,15 +11,40 @@ using Models;
 
 namespace View
 {
+
+    public delegate void StartConnection(string IPAdress, string name);
+
+
     public partial class GameWindow : Form
     {
-        private GameController.GameController control;
+        DrawingPanel GamePanel;
 
-        public GameWindow( ref GameController.GameController controller)
+        public event StartConnection startConnect;
+
+
+
+        private GameController.GameController controller;
+
+        public GameWindow()
         {
+            // 
+            // GamePanel
+            // 
+            GamePanel = new DrawingPanel();
+            GamePanel.Location = new System.Drawing.Point(3, 30);
+            GamePanel.MaximumSize = new System.Drawing.Size(900, 900);
+            GamePanel.MinimumSize = new System.Drawing.Size(900, 900);
+            GamePanel.Name = "GamePanel";
+            GamePanel.Size = new System.Drawing.Size(900, 900);
+            GamePanel.TabIndex = 0;
+            this.Controls.Add(GamePanel);
+
+            controller = new GameController.GameController();
+            controller.worldUpdate += UpdateWorld;
+
+            startConnect += controller.StartConnectionHandler;
+
             InitializeComponent();
-            control = controller;
-            control.UpdateMethod = UpdateWorld;
         }
 
         private void GameWindow_Load(object sender, EventArgs e)
@@ -27,11 +52,12 @@ namespace View
             // Invalidate this form and all its children
             // This will cause the form to redraw as soon as it can
             //this.Invalidate(true);
-           
+
         }
 
         public void UpdateWorld(World w)
         {
+
             GamePanel.UpdateWorld(w);
             try
             {
@@ -39,5 +65,14 @@ namespace View
             }
             catch (Exception) { }
         }
+
+        private void ConnectButton_Click(object sender, EventArgs e)
+        {
+            startConnect(AddresBox.Text, NameBox.Text);
+        }
     }
+
+
 }
+
+

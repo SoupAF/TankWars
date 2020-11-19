@@ -114,9 +114,9 @@ namespace Models
             return power.GetID();
         }
 
-        public IEnumerable<Wall> Getwalls()
+        public List<Wall> Getwalls()
         {
-            return walls.Values;
+            return new List<Wall>(walls.Values);
         }
 
         public void SetMainPlayer(Tank t)
@@ -139,11 +139,46 @@ namespace Models
             playerID = id;
         }
 
-        public IEnumerable<Tank> GetTanks() 
+        public List<Tank> GetTanks() 
         {
-            return tanks.Values;
+            return new List<Tank>(tanks.Values);
         }
-        
+
+        public List<Projectile> GetProjectiles() 
+        {
+            return new List<Projectile>(bullets.Values);
+        }
+
+        public List<Beam> GetBeams()
+        {
+            return new List<Beam>(beams.Values);
+        }
+
+        public List<Powerup> GetPowerups()
+        {
+            return new List<Powerup>(powerups.Values);
+        }
+
+        public List<int> GetTankIds() 
+        {
+            return new List<int>(tanks.Keys);
+        }
+
+        public List<int> GetBeamIds()
+        {
+            return new List<int>(beams.Keys);
+        }
+
+        public List<int> GetPowerupIds()
+        {
+            return new List<int>(powerups.Keys);
+        }
+
+        public List<int> GetProjectileIds()
+        {
+            return new List<int>(bullets.Keys);
+        }
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
