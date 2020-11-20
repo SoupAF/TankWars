@@ -141,16 +141,16 @@ namespace GameController
                 }
             }
 
-            
+
             state.OnNetworkAction = ServerUpdate;
             state.ClearData();
             NetworkUtil.Networking.GetData(state);
         }
         public void ServerUpdate(SocketState state)
         {
-            //lock(theWorld)
-            //theWorld.ClearWorld();
-            
+            lock (theWorld)
+                theWorld.ClearWorld();
+
 
             string data = state.GetData();
             int index;
@@ -178,7 +178,7 @@ namespace GameController
                     tank = o["tank"];
                     proj = o["proj"];
                 }
-                else 
+                else
                 {
                     beam = null;
                     power = null;
@@ -190,7 +190,23 @@ namespace GameController
                 if (tank != null)
                 {
                     Tank t = JsonConvert.DeserializeObject<Tank>(objectInfo);
-                    if (!theWorld.GetTankIds().Contains(t.GetID()))
+
+
+
+                    if (t.IsDead())
+                    {
+                        theWorld.KillTank(t.GetID(), t);
+                    }
+
+                    else if (theWorld.GetDeadTankIDs().Contains(t.GetID())) 
+                    {  
+                        if(t.GetLoc().GetX() != theWorld.GetDeadTank(t.GetID()).GetLoc().GetX() || t.GetLoc().GetY() != theWorld.GetDeadTank(t.GetID()).GetLoc().GetY())
+                            theWorld.RespawnTank(t.GetID());
+                    }
+
+
+
+                    else if (!theWorld.GetTankIds().Contains(t.GetID()))
                     {
                         lock (theWorld)
                         {
@@ -213,15 +229,18 @@ namespace GameController
                             }
                         }
                     }
+
+
                 }
 
                 else if (proj != null)
                 {
                     Projectile p = JsonConvert.DeserializeObject<Projectile>(objectInfo);
-                    if (!theWorld.GetProjectileIds().Contains(p.GetID()))
+                    lock (theWorld)
                     {
-                        lock (theWorld)
+                        if (!theWorld.GetProjectileIds().Contains(p.GetID()))
                         {
+
                             theWorld.AddProj(p);
                         }
                     }
@@ -230,10 +249,11 @@ namespace GameController
                 else if (beam != null)
                 {
                     Beam b = JsonConvert.DeserializeObject<Beam>(objectInfo);
-                    if (!theWorld.GetBeamIds().Contains(b.GetID()))
+                    lock (theWorld)
                     {
-                        lock (theWorld)
+                        if (!theWorld.GetBeamIds().Contains(b.GetID()))
                         {
+
                             theWorld.AddBeam(b);
                         }
                     }
@@ -242,11 +262,11 @@ namespace GameController
                 else if (power != null)
                 {
                     Powerup p = JsonConvert.DeserializeObject<Powerup>(objectInfo);
-                    List<Powerup> list = theWorld.GetPowerups();
-                    if (!theWorld.GetPowerupIds().Contains(p.GetID()))
+                    lock (theWorld)
                     {
-                        lock (theWorld)
+                        if (!theWorld.GetPowerupIds().Contains(p.GetID()))
                         {
+
                             theWorld.AddPowerup(p);
                         }
                     }

@@ -15,6 +15,7 @@ namespace Models
         private Dictionary<int, Projectile> bullets;
         private Dictionary<int, Beam> beams;
         private Dictionary<int, string> colors;
+        private Dictionary<int, Tank> deadTanks;
 
         private Tank player;
         private int colorCounter;
@@ -28,6 +29,7 @@ namespace Models
             bullets = new Dictionary<int, Projectile>();
             beams = new Dictionary<int, Beam>();
             colors = new Dictionary<int, string>();
+            deadTanks = new Dictionary<int, Tank>();
             colorCounter = 1;
             player = new Tank("default", -1);
         }
@@ -117,9 +119,9 @@ namespace Models
             return power.GetID();
         }
 
-        public List<Wall> Getwalls()
+        public HashSet<Wall> Getwalls()
         {
-            return new List<Wall>(walls.Values);
+            return new HashSet<Wall>(walls.Values);
         }
 
         public void SetMainPlayer(Tank t)
@@ -132,49 +134,69 @@ namespace Models
             return player;
         }
 
-        public List<Tank> GetTanks() 
+        public HashSet<Tank> GetTanks() 
         {
-            return new List<Tank>(tanks.Values);
+            lock (this)
+            {
+                return new HashSet<Tank>(tanks.Values);
+            }
         }
 
-        public List<Projectile> GetProjectiles() 
+        public HashSet<Projectile> GetProjectiles() 
         {
-            return new List<Projectile>(bullets.Values);
+            lock (this)
+            {
+                return new HashSet<Projectile>(bullets.Values);
+            }
         }
 
-        public List<Beam> GetBeams()
+        public HashSet<Beam> GetBeams()
         {
-            return new List<Beam>(beams.Values);
+            lock (this)
+            {
+                return new HashSet<Beam>(beams.Values);
+            }
         }
 
-        public List<Powerup> GetPowerups()
+        public HashSet<Powerup> GetPowerups()
         {
-            return new List<Powerup>(powerups.Values);
+            lock (this)
+            {
+                return new HashSet<Powerup>(powerups.Values);
+            }
             
         }
 
-        public List<int> GetTankIds() 
+        public HashSet<int> GetTankIds() 
         {
-            List<int> x = new List<int>(tanks.Keys);
-            return x;
+            lock (this)
+            {
+                return new HashSet<int>(tanks.Keys);
+            }
         }
 
-        public List<int> GetBeamIds()
+        public HashSet<int> GetBeamIds()
         {
-            List<int> x = new List<int>(beams.Keys);
-            return x;
+            lock (this)
+            {
+                return new HashSet<int>(beams.Keys);
+            }
         }
 
-        public List<int> GetPowerupIds()
+        public HashSet<int> GetPowerupIds()
         {
-            List<int> x = new List<int>(powerups.Keys);
-            return x;
+            lock (this)
+            {
+                return new HashSet<int>(powerups.Keys);
+            }
         }
 
-        public List<int> GetProjectileIds()
+        public HashSet<int> GetProjectileIds()
         {
-            List<int> x = new List<int>(bullets.Keys);
-            return x;
+            lock (this)
+            {
+                return new HashSet<int>(bullets.Keys);
+            }
         }
 
         public void UpdateTank(Tank t)
@@ -182,6 +204,41 @@ namespace Models
             tanks[t.GetID()] = t;
         }
 
+        public void RemoveTank(int id)
+        {
+            tanks.Remove(id);
+        }
+
+        public void KillTank(int id, Tank t) 
+        {
+            deadTanks.Add(id, t);
+        }
+
+        public void RespawnTank(int id)
+        {
+            deadTanks.Remove(id);
+        }
+
+        public HashSet<Tank> GetDeadTanks()
+        {
+            lock (this)
+            {
+                return new HashSet<Tank>(deadTanks.Values);
+            }
+        }
+
+        public HashSet<int> GetDeadTankIDs()
+        {
+            lock (this)
+            {
+                return new HashSet<int>(deadTanks.Keys);
+            }
+        }
+
+        public Tank GetDeadTank(int id)
+        {
+            return deadTanks[id];
+        }
 
     }
 
@@ -283,6 +340,11 @@ namespace Models
         {
             return power;
         }
+
+        public Vector2D GetLoc()
+        {
+            return loc;
+        }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -299,11 +361,21 @@ namespace Models
         [JsonProperty(PropertyName = "owner")]
         private int owner;
 
-        
-
+        public int GetOwner()
+        {
+            return owner;
+        }
+        public Vector2D GetLoc()
+        {
+            return loc;
+        }
         public int GetID()
         {
             return proj;
+        }
+        public Vector2D GetDir()
+        {
+            return dir;
         }
     }
 
