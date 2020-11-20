@@ -18,7 +18,6 @@ namespace Models
 
         private Tank player;
         private int colorCounter;
-        private int playerID;
 
         public World(int size)
         {
@@ -92,24 +91,28 @@ namespace Models
 
         public int AddWall(Wall wall)
         {
-            walls.Add(wall.GetID(), wall);
+            if (!walls.ContainsKey(wall.GetID()))
+                walls.Add(wall.GetID(), wall);
             return wall.GetID();
         }
 
         public int AddProj(Projectile proj)
         {
-            bullets.Add(proj.GetID(), proj);
+            if (!bullets.ContainsKey(proj.GetID()))
+                bullets.Add(proj.GetID(), proj);
             return proj.GetID();
         }
 
         public int AddBeam(Beam beam)
         {
-            beams.Add(beam.GetID(), beam);
+            if (!beams.ContainsKey(beam.GetID()))
+                beams.Add(beam.GetID(), beam);
             return beam.GetID();
         }
 
         public int AddPowerup(Powerup power) 
         {
+            if(!powerups.ContainsKey(power.GetID()))
             powerups.Add(power.GetID(), power);
             return power.GetID();
         }
@@ -127,16 +130,6 @@ namespace Models
         public Tank GetMainPlayer()
         {
             return player;
-        }
-
-        public int GetMainPlayerID()
-        {
-            return playerID;
-        }
-
-        public void SetPlayerID(int id) 
-        {
-            playerID = id;
         }
 
         public List<Tank> GetTanks() 
@@ -157,27 +150,38 @@ namespace Models
         public List<Powerup> GetPowerups()
         {
             return new List<Powerup>(powerups.Values);
+            
         }
 
         public List<int> GetTankIds() 
         {
-            return new List<int>(tanks.Keys);
+            List<int> x = new List<int>(tanks.Keys);
+            return x;
         }
 
         public List<int> GetBeamIds()
         {
-            return new List<int>(beams.Keys);
+            List<int> x = new List<int>(beams.Keys);
+            return x;
         }
 
         public List<int> GetPowerupIds()
         {
-            return new List<int>(powerups.Keys);
+            List<int> x = new List<int>(powerups.Keys);
+            return x;
         }
 
         public List<int> GetProjectileIds()
         {
-            return new List<int>(bullets.Keys);
+            List<int> x = new List<int>(bullets.Keys);
+            return x;
         }
+
+        public void UpdateTank(Tank t)
+        {
+            tanks[t.GetID()] = t;
+        }
+
 
     }
 
@@ -234,7 +238,35 @@ namespace Models
             return loc;
         }
 
+        public Vector2D Getbdir()
+        {
+            return bdir;
+        }
 
+        public Vector2D Gettdir()
+        {
+            return tdir;
+        }
+
+        public void ChangeLoc(Vector2D NewLoc)
+        {
+            loc = NewLoc;
+        }
+
+        public void Changebdir(Vector2D Newdir)
+        {
+            bdir = Newdir;
+        }
+
+        public void Changetdir(Vector2D Newdir)
+        {
+            tdir = Newdir;
+        }
+
+        public bool IsDead()
+        {
+            return died;
+        }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -278,9 +310,13 @@ namespace Models
     [JsonObject(MemberSerialization.OptIn)]
     public class Beam
     {
+        [JsonProperty(PropertyName = "beam")]
         private int beam;
+        [JsonProperty(PropertyName = "org")]
         private Vector2D org;
+        [JsonProperty(PropertyName = "dir")]
         private Vector2D dir;
+        [JsonProperty(PropertyName = "owner")]
         private int owner;
 
         public int GetID()

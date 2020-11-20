@@ -61,7 +61,8 @@ namespace View
             GamePanel.UpdateWorld(w);
             try
             {
-                Invoke(new MethodInvoker(() => Invalidate(true)));
+                MethodInvoker invoker = new MethodInvoker(() => Invalidate(true));
+                this.Invoke(invoker);
             }
             catch (Exception) { }
         }

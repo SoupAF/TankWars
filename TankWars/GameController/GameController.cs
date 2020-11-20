@@ -18,18 +18,13 @@ namespace GameController
         private string playerName;
         private World theWorld;
         private Tank player;
-        private Dictionary<string, List<int>> addedItems;
+
 
 
         public GameController()
         {
-            addedItems = new Dictionary<string, List<int>>();
-            addedItems.Add("Models.Tank", new List<int>());
-            addedItems.Add("Models.Powerup", new List<int>());
-            addedItems.Add("Models.Beam", new List<int>());
-            addedItems.Add("Models.Projectile", new List<int>());
-        }
 
+        }
         public void StartConnectionHandler(string IpAddress, string name)
         {
             playerName = name;
@@ -71,7 +66,11 @@ namespace GameController
                 size = int.Parse(worldSize);
                 player = new Tank(playerName, id);
                 theWorld = new World(size);
-                theWorld.AddPlayer(player);
+                lock (theWorld)
+                {
+                    //theWorld.AddPlayer(player);
+                    theWorld.SetMainPlayer(player);
+                }
 
                 string wallData;
 
@@ -109,8 +108,8 @@ namespace GameController
                 theWorld = new World(size);
                 lock (theWorld)
                 {
-                    theWorld.AddPlayer(player);
-                    theWorld.SetPlayerID(id);
+                    //theWorld.AddPlayer(player);
+                    theWorld.SetMainPlayer(player);
                 }
                 state.OnNetworkAction = GetWalls;
             }
@@ -142,16 +141,16 @@ namespace GameController
                 }
             }
 
-            //UpdateMethod(theWorld);
+            
             state.OnNetworkAction = ServerUpdate;
             state.ClearData();
             NetworkUtil.Networking.GetData(state);
         }
         public void ServerUpdate(SocketState state)
         {
-            theWorld.ClearWorld();
-            foreach (List<int> l in addedItems.Values)
-                l.Clear();
+            //lock(theWorld)
+            //theWorld.ClearWorld();
+            
 
             string data = state.GetData();
             int index;
@@ -168,13 +167,24 @@ namespace GameController
                 data = data.Substring(index + 1);
 
                 //Get the type of object 
-                JObject o = JObject.Parse(objectInfo);
-                proj = o["proj"];
-                beam = o["beam"];
-                power = o["power"];
-                tank = o["tank"];
+                JObject o;
+                try { o = JObject.Parse(objectInfo); }
+                catch (Exception) { o = null; }
 
-
+                if (o != null)
+                {
+                    beam = o["beam"];
+                    power = o["power"];
+                    tank = o["tank"];
+                    proj = o["proj"];
+                }
+                else 
+                {
+                    beam = null;
+                    power = null;
+                    tank = null;
+                    proj = null;
+                }
 
 
                 if (tank != null)
@@ -184,12 +194,23 @@ namespace GameController
                     {
                         lock (theWorld)
                         {
-                            if (t.GetID() == theWorld.GetMainPlayerID())
+                            if (t.GetID() == theWorld.GetMainPlayer().GetID())
                             {
                                 theWorld.SetMainPlayer(t);
                             }
 
                             theWorld.AddPlayer(t);
+                        }
+                    }
+                    else
+                    {
+                        lock (theWorld)
+                        {
+                            theWorld.UpdateTank(t);
+                            if (t.GetID() == theWorld.GetMainPlayer().GetID())
+                            {
+                                theWorld.SetMainPlayer(t);
+                            }
                         }
                     }
                 }
