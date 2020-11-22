@@ -4,7 +4,7 @@ using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
 using System.Windows.Forms;
-
+using TankWars;
 
 namespace GameController
 {
@@ -276,6 +276,21 @@ namespace GameController
 
             state.ClearData();
             worldUpdate(theWorld);
+            NetworkUtil.Networking.GetData(state);
+        }
+
+        public void Movement(Vector2D a)
+        {
+            Tank main = theWorld.GetMainPlayer();
+            main.Changebdir(a);
+            main.ChangeLoc(a);
+        }
+
+        public void send(SocketState state)
+        {
+            String mainPlayerInfo = JsonConvert.SerializeObject(theWorld.GetMainPlayer());
+
+            NetworkUtil.Networking.Send(state.TheSocket, mainPlayerInfo);
             NetworkUtil.Networking.GetData(state);
         }
 

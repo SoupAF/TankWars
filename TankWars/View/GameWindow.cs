@@ -8,6 +8,7 @@ using System.Text;
 using System.Threading.Tasks;
 using System.Windows.Forms;
 using Models;
+using TankWars;
 
 namespace View
 {
@@ -70,6 +71,33 @@ namespace View
         private void ConnectButton_Click(object sender, EventArgs e)
         {
             startConnect(AddresBox.Text, NameBox.Text);
+        }
+
+        private void textBox1_KeyDown(object o, KeyEventArgs e)
+        {
+            if(e.KeyCode == Keys.A)
+            {
+                Vector2D left = new Vector2D(-1, 0);
+                controller.Movement(left);
+            }
+
+            if(e.KeyCode == Keys.W)
+            {
+                Vector2D up = new Vector2D(0, 1);
+                controller.Movement(up);
+            }
+            
+            if(e.KeyCode == Keys.S)
+            {
+                Vector2D down = new Vector2D(0, -1);
+                controller.Movement(down);
+            }
+
+            if(e.KeyCode == Keys.D)
+            {
+                Vector2D right = new Vector2D(1, 0);
+                controller.Movement(right);
+            }
         }
     }
 

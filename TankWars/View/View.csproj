@@ -96,6 +96,10 @@
       <Project>{14396847-7c58-4107-908e-47c4e0581ea2}</Project>
       <Name>Models</Name>
     </ProjectReference>
+    <ProjectReference Include="..\Vector2D\Vector2D.csproj">
+      <Project>{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}</Project>
+      <Name>Vector2D</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
 </Project>
