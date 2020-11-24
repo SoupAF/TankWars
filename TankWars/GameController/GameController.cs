@@ -10,20 +10,24 @@ namespace GameController
 {
 
     public delegate void WorldUpdate(World w);
+    public delegate void ErrorOccured(string messaage);
 
     public class GameController
     {
         public event WorldUpdate worldUpdate;
+        public event ErrorOccured error;
+
 
         private string playerName;
         private World theWorld;
         private Tank player;
+        private ControlCommand command;
 
 
 
         public GameController()
         {
-
+            command = new ControlCommand();
         }
         public void StartConnectionHandler(string IpAddress, string name)
         {
@@ -34,6 +38,11 @@ namespace GameController
 
         public void ConectionFinalized(SocketState state)
         {
+            if (state.ErrorOccured)
+            {
+                error(state.ErrorMessage);
+                return;
+            }
 
             NetworkUtil.Networking.Send(state.TheSocket, playerName + '\n');
             state.OnNetworkAction = SetupGame;
@@ -42,6 +51,8 @@ namespace GameController
 
         public void SetupGame(SocketState state)
         {
+            
+
             string data = state.GetData();
 
 
@@ -68,7 +79,6 @@ namespace GameController
                 theWorld = new World(size);
                 lock (theWorld)
                 {
-                    //theWorld.AddPlayer(player);
                     theWorld.SetMainPlayer(player);
                 }
 
@@ -108,7 +118,6 @@ namespace GameController
                 theWorld = new World(size);
                 lock (theWorld)
                 {
-                    //theWorld.AddPlayer(player);
                     theWorld.SetMainPlayer(player);
                 }
                 state.OnNetworkAction = GetWalls;
@@ -148,6 +157,13 @@ namespace GameController
         }
         public void ServerUpdate(SocketState state)
         {
+
+            if (state.ErrorOccured)
+            {
+                error(state.ErrorMessage);
+                return;
+            }
+
             lock (theWorld)
                 theWorld.ClearWorld();
 
@@ -198,9 +214,9 @@ namespace GameController
                         theWorld.KillTank(t.GetID(), t);
                     }
 
-                    else if (theWorld.GetDeadTankIDs().Contains(t.GetID())) 
-                    {  
-                        if(t.GetLoc().GetX() != theWorld.GetDeadTank(t.GetID()).GetLoc().GetX() || t.GetLoc().GetY() != theWorld.GetDeadTank(t.GetID()).GetLoc().GetY())
+                    else if (theWorld.GetDeadTankIDs().Contains(t.GetID()))
+                    {
+                        if (t.GetLoc().GetX() != theWorld.GetDeadTank(t.GetID()).GetLoc().GetX() || t.GetLoc().GetY() != theWorld.GetDeadTank(t.GetID()).GetLoc().GetY())
                             theWorld.RespawnTank(t.GetID());
                     }
 
@@ -276,26 +292,153 @@ namespace GameController
 
             state.ClearData();
             worldUpdate(theWorld);
+            send(state);
             NetworkUtil.Networking.GetData(state);
         }
 
-        public void Movement(Vector2D a)
+        public void AddMovement(string dir)
         {
-            Tank main = theWorld.GetMainPlayer();
-            main.Changebdir(a);
-            main.ChangeLoc(a);
+            if (command.movements.Peek() != dir)
+                command.movements.Push(dir);
+            command.moving = command.movements.Peek();
+        }
+
+        public void RemoveMovement(int key)
+        {
+
+
+
+            if (key == 87)
+            {
+                if (command.movements.Peek() == "up")
+                    command.movements.Pop();
+
+                if (command.movements.Contains("up"))
+                {
+                    string[] commands = command.movements.ToArray();
+                    command.movements.Clear();
+                    foreach (string s in commands)
+                    {
+                        if (s != "up")
+                            command.movements.Push(s);
+                    }
+                }
+
+            }
+
+            else if (key == 65)
+            {
+                if (command.movements.Peek() == "left")
+                    command.movements.Pop();
+
+                if (command.movements.Contains("left"))
+                {
+                    string[] commands = command.movements.ToArray();
+                    command.movements.Clear();
+                    foreach (string s in commands)
+                    {
+                        if (s != "left")
+                            command.movements.Push(s);
+                    }
+                }
+            }
+
+            else if (key == 83)
+            {
+                if (command.movements.Peek() == "down")
+                    command.movements.Pop();
+
+                if (command.movements.Contains("down"))
+                {
+                    string[] commands = command.movements.ToArray();
+                    command.movements.Clear();
+                    foreach (string s in commands)
+                    {
+                        if (s != "down")
+                            command.movements.Push(s);
+                    }
+                }
+            }
+
+
+            else if (key == 68)
+            {
+                if (command.movements.Peek() == "right")
+                    command.movements.Pop();
+
+                if (command.movements.Contains("right"))
+                {
+                    string[] commands = command.movements.ToArray();
+                    command.movements.Clear();
+                    foreach (string s in commands)
+                    {
+                        if (s != "right")
+                            command.movements.Push(s);
+                    }
+                }
+            }
+
+            command.moving = command.movements.Peek();
+
         }
 
         public void send(SocketState state)
         {
-            String mainPlayerInfo = JsonConvert.SerializeObject(theWorld.GetMainPlayer());
+            String message = JsonConvert.SerializeObject(command);
 
-            NetworkUtil.Networking.Send(state.TheSocket, mainPlayerInfo);
-            NetworkUtil.Networking.GetData(state);
+            NetworkUtil.Networking.Send(state.TheSocket, message + "\n");
+        }
+
+        public void Shoot(string shoot)
+        {
+            command.fire = shoot;
+        }
+
+        public void TurretMove(Vector2D dir)
+        {
+            command.tdir = dir;
         }
 
 
+        [JsonObject(MemberSerialization.OptIn)]
+        public class ControlCommand
+        {
 
+            string Move;
+            string Fire;
+            Vector2D Dir;
+
+
+            public Stack<string> movements;
+
+            public ControlCommand()
+            {
+                moving = "none";
+                fire = "none";
+                tdir = new Vector2D(0, 1);
+                movements = new Stack<string>();
+                movements.Push("none");
+            }
+
+            [JsonProperty]
+            public string moving
+            {
+                get { return Move; }
+                set { Move = value; }
+            }
+            [JsonProperty]
+            public string fire
+            {
+                get { return Fire; }
+                set { Fire = value; }
+            }
+            [JsonProperty]
+            public Vector2D tdir
+            {
+                get { return Dir; }
+                set { Dir = value; }
+            }
+        }
 
 
     }

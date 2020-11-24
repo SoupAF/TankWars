@@ -14,6 +14,7 @@ namespace View
 {
 
     public delegate void StartConnection(string IPAdress, string name);
+    
 
 
     public partial class GameWindow : Form
@@ -38,23 +39,33 @@ namespace View
             GamePanel.Name = "GamePanel";
             GamePanel.Size = new System.Drawing.Size(900, 900);
             GamePanel.TabIndex = 0;
+            GamePanel.KeyDown += this.GameWindow_KeyDown;
+            GamePanel.MouseDown += this.GamePanel_MouseDown;
+            GamePanel.MouseUp += this.GamePanel_MouseUp;
+            GamePanel.MouseMove += this.GamePanel_MouseMove;
+            GamePanel.KeyUp += this.GamePanel_KeyUp;
             this.Controls.Add(GamePanel);
+
 
             controller = new GameController.GameController();
             controller.worldUpdate += UpdateWorld;
+            
 
             startConnect += controller.StartConnectionHandler;
+            controller.error += HandleError;
 
             InitializeComponent();
         }
 
-        private void GameWindow_Load(object sender, EventArgs e)
+        public void HandleError(string message)
         {
-            // Invalidate this form and all its children
-            // This will cause the form to redraw as soon as it can
-            //this.Invalidate(true);
-
+            MethodInvoker i = new MethodInvoker(() => ErrorBox.Text = message);
+            this.Invoke(i);
+            ConnectButton.Enabled = true;
+            NameBox.Enabled = true;
+            AddresBox.Enabled = true;
         }
+       
 
         public void UpdateWorld(World w)
         {
@@ -71,33 +82,64 @@ namespace View
         private void ConnectButton_Click(object sender, EventArgs e)
         {
             startConnect(AddresBox.Text, NameBox.Text);
+            this.GamePanel.Focus();
+            ConnectButton.Enabled = false;
+            NameBox.Enabled = false;
+            AddresBox.Enabled = false;
         }
 
-        private void textBox1_KeyDown(object o, KeyEventArgs e)
+        private void GameWindow_KeyDown(object o, KeyEventArgs e)
         {
-            if(e.KeyCode == Keys.A)
+            if (e.KeyCode == Keys.A)
             {
-                Vector2D left = new Vector2D(-1, 0);
-                controller.Movement(left);
+                controller.AddMovement("left");
             }
 
-            if(e.KeyCode == Keys.W)
+            if (e.KeyCode == Keys.W)
             {
-                Vector2D up = new Vector2D(0, 1);
-                controller.Movement(up);
-            }
-            
-            if(e.KeyCode == Keys.S)
-            {
-                Vector2D down = new Vector2D(0, -1);
-                controller.Movement(down);
+                controller.AddMovement("up");
             }
 
-            if(e.KeyCode == Keys.D)
+            if (e.KeyCode == Keys.S)
             {
-                Vector2D right = new Vector2D(1, 0);
-                controller.Movement(right);
+                controller.AddMovement("down");
             }
+
+            if (e.KeyCode == Keys.D)
+            {
+                controller.AddMovement("right");
+            }
+        }
+
+        private void GamePanel_MouseDown(object sender, MouseEventArgs e)
+        {
+            if (e.Button == MouseButtons.Left)
+                controller.Shoot("main");
+            else if (e.Button == MouseButtons.Right)
+                controller.Shoot("alt");
+        }
+
+        private void GamePanel_MouseUp(object sender, MouseEventArgs e)
+        {
+            controller.Shoot("none");
+        }
+
+        private void GamePanel_MouseMove(object sender, MouseEventArgs e)
+        {
+            int x = e.X;
+            int y = e.Y;
+
+            x = x - 450;
+            y = y - 450;
+
+            Vector2D dir = new Vector2D(x, y);
+            dir.Normalize();
+            controller.TurretMove(dir);
+        }
+
+        private void GamePanel_KeyUp(object sender, KeyEventArgs e)
+        {
+            controller.RemoveMovement(e.KeyValue);
         }
     }
 

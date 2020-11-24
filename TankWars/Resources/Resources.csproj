@@ -38,6 +38,7 @@
   </ItemGroup>
   <ItemGroup>
     <Content Include="Images\Background.png" />
+    <Content Include="Images\beam.png" />
     <Content Include="Images\BlueTank.png" />
     <Content Include="Images\BlueTurret.png" />
     <Content Include="Images\DarkTank.png" />

@@ -285,6 +285,21 @@ namespace Models
 
         }
 
+        public int GetHP()
+        {
+            return hp;
+        }
+
+        public int GetScore()
+        {
+            return score;
+        }
+
+        public string GetName()
+        {
+            return name;
+        }
+
         public int GetID()
         {
             return tank;
@@ -394,6 +409,16 @@ namespace Models
         public int GetID()
         {
             return beam;
+        }
+
+        public Vector2D GetOrg()
+        {
+            return org;
+        }
+
+        public Vector2D GetDir()
+        {
+            return dir;
         }
     }
 

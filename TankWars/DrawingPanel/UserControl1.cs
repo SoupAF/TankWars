@@ -13,6 +13,8 @@ namespace View
         private World theWorld;
         private Image background;
         private Image wall;
+        private Image beam;
+
         private Image BluePlayer;
         private Image DarkPlayer;
         private Image GreenPlayer;
@@ -43,11 +45,13 @@ namespace View
         private Image YellowShot;
 
 
+
         public DrawingPanel()
         {
             DoubleBuffered = true;
             background = Image.FromFile("..\\..\\..\\Resources\\Images\\Background.png");
             wall = Image.FromFile("..\\..\\..\\Resources\\Images\\WallSprite.png");
+            beam = Image.FromFile("..\\..\\..\\Resources\\Images\\beam.png");
 
             //Tank Bases
             BluePlayer = Image.FromFile("..\\..\\..\\Resources\\Images\\BlueTank.png");
@@ -311,7 +315,51 @@ namespace View
            
         }
 
+        private void StatsDrawer(object o, PaintEventArgs e)
+        {
+            Tank t = o as Tank;
+            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            
+            if(t.GetHP() == 3)
+                e.Graphics.FillRectangle(new SolidBrush(Color.Green), 0, 0, 60, 5);
+            else if (t.GetHP() == 2)
+                e.Graphics.FillRectangle(new SolidBrush(Color.Yellow), 0, 0, 40, 5);
+            else if(t.GetHP() == 1)
+                e.Graphics.FillRectangle(new SolidBrush(Color.Red), 0, 0, 20, 5);
+
+            string text = t.GetName() + ":" + t.GetScore();
+            int offset = text.Length % 5;
+
+            e.Graphics.DrawString(text, DefaultFont, new SolidBrush(Color.Black), 15-(offset*7), 70);
+        }
       
+        private void BeamDrawer(PaintEventArgs e, object o, int worldSize, double worldX, double worldY, double angle)
+        {
+            // "push" the current transform
+            System.Drawing.Drawing2D.Matrix oldMatrix = e.Graphics.Transform.Clone();
+
+            int x = WorldSpaceToImageSpace(worldSize, worldX);
+            int y = WorldSpaceToImageSpace(worldSize, worldY);
+
+            e.Graphics.TranslateTransform(x + 15, y + 15);
+
+            e.Graphics.TranslateTransform(10, 10);
+            e.Graphics.RotateTransform((float)angle);
+            e.Graphics.TranslateTransform(-10, -10);
+
+
+            
+
+            
+
+
+
+            e.Graphics.DrawImage(beam, 0, 0, 900, 10);
+            // "pop" the transform
+            e.Graphics.Transform = oldMatrix;
+        }
+
 
         // This method is invoked when the DrawingPanel needs to be re-drawn
         protected override void OnPaint(PaintEventArgs e)
@@ -336,7 +384,7 @@ namespace View
             e.Graphics.TranslateTransform((float)inverseTranslateX, (float)inverseTranslateY);
 
 
-            e.Graphics.DrawImage(background, 25, 25, theWorld.GetSize(), theWorld.GetSize());
+            e.Graphics.DrawImage(background, -5, 0, theWorld.GetSize(), theWorld.GetSize());
 
 
             // Draw the players
@@ -346,23 +394,31 @@ namespace View
 
                 HashSet<Tank> test = theWorld.GetTanks();
 
+                //Draw Beams
+                foreach (Beam b in theWorld.GetBeams())
+                {
+                    BeamDrawer(e, b, theWorld.GetSize(), b.GetOrg().GetX() - 30, b.GetOrg().GetY() - 30, b.GetDir().ToAngle() - 90);
+                }
+
                 foreach (Tank t in theWorld.GetTanks())
                 {
                     
                         bdir = t.Getbdir();
                         if (bdir.GetX() == 1)
-                            DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX() + 60, t.GetLoc().GetY(), 90, TankDrawer);
+                            DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX() + 30, t.GetLoc().GetY()-30, 90, TankDrawer);
 
                         else if (bdir.GetY() == -1)
-                            DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX(), t.GetLoc().GetY(), 0, TankDrawer);
+                            DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX()-30, t.GetLoc().GetY()-30, 0, TankDrawer);
 
                         else if (bdir.GetX() == -1)
-                            DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX(), t.GetLoc().GetY() + 60, 270, TankDrawer);
+                            DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX()-30, t.GetLoc().GetY() + 30, 270, TankDrawer);
 
-                        else DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX() + 60, t.GetLoc().GetY() + 60, 180, TankDrawer);
+                        else DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX() + 30, t.GetLoc().GetY() + 30, 180, TankDrawer);
 
-                        TurretDrawer(e, t, theWorld.GetSize(), t.GetLoc().GetX(), t.GetLoc().GetY(), t.Gettdir().ToAngle());
-                    
+                        TurretDrawer(e, t, theWorld.GetSize(), t.GetLoc().GetX()-30, t.GetLoc().GetY()-30, t.Gettdir().ToAngle());
+
+                        DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX()-30, t.GetLoc().GetY()-40, 0, StatsDrawer);
+
                 }
                 
                 // Draw the powerups
@@ -395,9 +451,9 @@ namespace View
                         while (length > 0)
                         {
                             if (wall.Corner1.GetY() > 0)
-                                DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX(), wall.Corner1.GetY() - length, 0, WallDrawer);
+                                DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX()-30, wall.Corner1.GetY() - length-25, 0, WallDrawer);
 
-                            else DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX(), wall.Corner1.GetY() + length, 0, WallDrawer);
+                            else DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX()-30, wall.Corner1.GetY() + length-25, 0, WallDrawer);
 
                             length = length - 50;
                         }
@@ -412,9 +468,9 @@ namespace View
                         while (length > 0)
                         {
                             if (wall.Corner1.GetX() < 0)
-                                DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX() - 50 + length, wall.Corner1.GetY(), 0, WallDrawer);
+                                DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX() - 80 + length, wall.Corner1.GetY()-25, 0, WallDrawer);
 
-                            else DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX() + 50 - length, wall.Corner1.GetY(), 0, WallDrawer);
+                            else DrawObjectWithTransform(e, wall, theWorld.GetSize(), wall.Corner1.GetX() + 20 - length, wall.Corner1.GetY()-25, 0, WallDrawer);
 
                             length = length - 50;
                         }
@@ -425,8 +481,10 @@ namespace View
                 //Draw Projectiles
                 foreach (Projectile p in theWorld.GetProjectiles())
                 {
-                    ProjectileDrawer(e, p, theWorld.GetSize(), p.GetLoc().GetX(), p.GetLoc().GetY(), p.GetDir().ToAngle());
+                    ProjectileDrawer(e, p, theWorld.GetSize(), p.GetLoc().GetX()-30, p.GetLoc().GetY()-30, p.GetDir().ToAngle());
                 }
+
+                
 
 
             }
