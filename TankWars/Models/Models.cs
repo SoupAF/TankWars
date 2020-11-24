@@ -8,18 +8,32 @@ namespace Models
 {
     public class World
     {
+        //size of the world.
         private int size;
+        //Keeps track of all tanks and their id's
         private Dictionary<int, Tank> tanks;
+        //Keeps track of all the powerups with their id's
         private Dictionary<int, Powerup> powerups;
+        //Keeps track of all walls similarly.
         private Dictionary<int, Wall> walls;
+        //Keeps track of all of the projectiles and their id's
         private Dictionary<int, Projectile> bullets;
+        //Keeps track of all beams and their id's
         private Dictionary<int, Beam> beams;
+        //Keeps track of all colors and who they belong to.
         private Dictionary<int, string> colors;
+        //Keeps track of tanks that have died.
         private Dictionary<int, Tank> deadTanks;
 
+        //The main player
         private Tank player;
+        //Keeps track of what color to assing to tanks as they enter the game.
         private int colorCounter;
 
+        /// <summary>
+        /// Initializes everything for the base world.
+        /// </summary>
+        /// <param name="size"></param>
         public World(int size)
         {
             this.size = size;
@@ -31,6 +45,7 @@ namespace Models
             colors = new Dictionary<int, string>();
             deadTanks = new Dictionary<int, Tank>();
             colorCounter = 1;
+            //Makes the player a temporary tank on the first set up just for holding purposes.
             player = new Tank("default", -1);
         }
 
@@ -39,6 +54,9 @@ namespace Models
             return size;
         }
 
+        /// <summary>
+        /// Clears some dictionaries for easier updating.
+        /// </summary>
         public void ClearWorld()
         {
             tanks.Clear();
@@ -47,6 +65,11 @@ namespace Models
             powerups.Clear();
         }
 
+        /// <summary>
+        /// Adds a player to the world by first adding them to the tanks dictionary, then assigning them a color.
+        /// </summary>
+        /// <param name="play"></param>
+        /// <returns></returns>
         public int AddPlayer(Tank play)
         {
             try { tanks.Add(play.GetID(), play); }
@@ -90,7 +113,11 @@ namespace Models
             return color;
         }
 
-
+        /// <summary>
+        /// Adds a wall but double checks not to add exisiting walls again.
+        /// </summary>
+        /// <param name="wall"></param>
+        /// <returns></returns>
         public int AddWall(Wall wall)
         {
             if (!walls.ContainsKey(wall.GetID()))
@@ -266,6 +293,11 @@ namespace Models
         [JsonProperty(PropertyName = "joined")]
         private bool joined;
 
+        /// <summary>
+        /// Sets up default for each tank.
+        /// </summary>
+        /// <param name="Name"></param>
+        /// <param name="ID"></param>
         public Tank(string Name, int ID)
         {
             tank = ID;
@@ -437,6 +469,9 @@ namespace Models
             return wall;
         }
 
+        /// <summary>
+        /// Different way to set up getter methods for p1 and below p2.
+        /// </summary>
         public Vector2D Corner1
         {
             get { return p1; }
@@ -453,6 +488,9 @@ namespace Models
         
     }
 
+    /// <summary>
+    /// These are the controls to send through json to the server.
+    /// </summary>
     public class ControlCommand
     {
         private string moving;
