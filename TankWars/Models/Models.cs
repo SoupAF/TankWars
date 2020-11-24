@@ -488,13 +488,5 @@ namespace Models
         
     }
 
-    /// <summary>
-    /// These are the controls to send through json to the server.
-    /// </summary>
-    public class ControlCommand
-    {
-        private string moving;
-        private string fire;
-        private Vector2D tdir;
-    }
+    
 }

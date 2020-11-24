@@ -28,7 +28,7 @@ namespace View
         private GameController.GameController controller;
 
         /// <summary>
-        /// Sets up the GamePanel and initializes all the field that need initializing.
+        /// Sets up the GamePanel and initializes all the fields that need initializing.
         /// </summary>
         public GameWindow()
         {

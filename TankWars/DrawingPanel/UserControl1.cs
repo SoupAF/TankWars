@@ -132,36 +132,42 @@ namespace View
             e.Graphics.Transform = oldMatrix;
         }
 
+        /// <summary>
+        /// Updates the current world with a new one
+        /// </summary>
+        /// <param name="w"></param>
         public void UpdateWorld(World w)
         {
             theWorld = w;
-            //Remove this line later
-
         }
 
-        private void BackgroundDrawer(object o, PaintEventArgs e)
-        {
-
-            e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-            //Replace 2000 with world size
-            e.Graphics.DrawImage(background, 0, 0, theWorld.GetSize(), theWorld.GetSize());
-        }
-
+        
+        /// <summary>
+        /// Draws wall objects after DrawObjectWithTransform
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="e"></param>
         private void WallDrawer(object o, PaintEventArgs e)
         {
+            //Draw the wall as a 50x50 square
             Wall w = o as Wall;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
-
-
-
             e.Graphics.DrawImage(wall, 0, 0, 50, 50);
 
         }
 
+        /// <summary>
+        /// Draws a tank base after DrawObjectWithTransform
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="e"></param>
         private void TankDrawer(object o, PaintEventArgs e)
         {
+            
             Tank t = o as Tank;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            //Get the tank ID and color
             int id = t.GetID();
             string color = theWorld.GetTankColor(id);
             
@@ -192,10 +198,8 @@ namespace View
 
             else toDraw = YellowPlayer;
 
+
             e.Graphics.DrawImage(toDraw, 0, 0, 60, 60);
-
-            
-
         }
 
         private void TurretDrawer(PaintEventArgs e, object o, int worldSize, double worldX, double worldY, double angle)
@@ -206,14 +210,18 @@ namespace View
             int x = WorldSpaceToImageSpace(worldSize, worldX);
             int y = WorldSpaceToImageSpace(worldSize, worldY);
 
+            //Shift the panel to the deisred coordinates
             e.Graphics.TranslateTransform(x+5, y+5);
 
+            //Shift the panel to the center of the turret, rotate the turret, and shift back
             e.Graphics.TranslateTransform(25, 25);
             e.Graphics.RotateTransform((float)angle);
             e.Graphics.TranslateTransform(-25, -25);
 
             Tank t = o as Tank;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
+
+            //Get the tank ID and color
             int id = t.GetID();
             string color = theWorld.GetTankColor(id);
             
@@ -260,7 +268,11 @@ namespace View
             int x = WorldSpaceToImageSpace(worldSize, worldX);
             int y = WorldSpaceToImageSpace(worldSize, worldY);
 
+            //Shift the panel to the deisred coordinates
+
             e.Graphics.TranslateTransform(x+15, y+15);
+
+            //Shift the panel to the center of the projectile, rotate the projectile, and shift back
 
             e.Graphics.TranslateTransform(15, 15);
             e.Graphics.RotateTransform((float)angle);
@@ -268,6 +280,8 @@ namespace View
 
 
             Projectile p = o as Projectile;
+
+            //Get the projectile color and ID
             Vector2D loc = p.GetLoc();
             int tankID = p.GetOwner();
             string color = theWorld.GetTankColor(tankID);
@@ -308,8 +322,8 @@ namespace View
         {
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
+            //Draw a yellow circle, and then a smaller red one on top
             e.Graphics.DrawEllipse(new Pen(Color.Yellow, 7), 0, 0, 9, 9);
-
             e.Graphics.DrawEllipse(new Pen(Color.Red, 5), 2, 2, 5, 5);
             
            
@@ -320,7 +334,7 @@ namespace View
             Tank t = o as Tank;
             e.Graphics.SmoothingMode = System.Drawing.Drawing2D.SmoothingMode.AntiAlias;
 
-            
+            //Draws the hp bar based on current hp, green for 3, yellow for 2, and red for 1.
             if(t.GetHP() == 3)
                 e.Graphics.FillRectangle(new SolidBrush(Color.Green), 0, 0, 60, 5);
             else if (t.GetHP() == 2)
@@ -328,9 +342,9 @@ namespace View
             else if(t.GetHP() == 1)
                 e.Graphics.FillRectangle(new SolidBrush(Color.Red), 0, 0, 20, 5);
 
+            //Get the tank name and score, then draw it with an offset to make it slighlty more centered
             string text = t.GetName() + ":" + t.GetScore();
             int offset = text.Length % 5;
-
             e.Graphics.DrawString(text, DefaultFont, new SolidBrush(Color.Black), 15-(offset*7), 70);
         }
       
@@ -342,17 +356,13 @@ namespace View
             int x = WorldSpaceToImageSpace(worldSize, worldX);
             int y = WorldSpaceToImageSpace(worldSize, worldY);
 
+            //Shift to the correct coordinates
             e.Graphics.TranslateTransform(x + 15, y + 15);
 
+            //Shift to the desired center, rotate, and shift back
             e.Graphics.TranslateTransform(10, 10);
             e.Graphics.RotateTransform((float)angle);
             e.Graphics.TranslateTransform(-10, -10);
-
-
-            
-
-            
-
 
 
             e.Graphics.DrawImage(beam, 0, 0, 900, 10);
@@ -364,26 +374,22 @@ namespace View
         // This method is invoked when the DrawingPanel needs to be re-drawn
         protected override void OnPaint(PaintEventArgs e)
         {
-
-
+            //Center the panel on the main tank
             Tank player = theWorld.GetMainPlayer();
             Vector2D loc = player.GetLoc();
             double playerX = loc.GetX();
             double playerY = loc.GetY();
 
 
-            // calculate view/world size ratio
             double ratio = (double)900 / (double)theWorld.GetSize();
             int halfSizeScaled = (int)(theWorld.GetSize() / 2.0 * ratio);
 
             double inverseTranslateX = -WorldSpaceToImageSpace(theWorld.GetSize(), playerX) + halfSizeScaled;
             double inverseTranslateY = -WorldSpaceToImageSpace(theWorld.GetSize(), playerY) + halfSizeScaled;
 
-
-
             e.Graphics.TranslateTransform((float)inverseTranslateX, (float)inverseTranslateY);
 
-
+            //Draw the background
             e.Graphics.DrawImage(background, -5, 0, theWorld.GetSize(), theWorld.GetSize());
 
 
@@ -392,7 +398,6 @@ namespace View
             {
                 Vector2D bdir;
 
-                HashSet<Tank> test = theWorld.GetTanks();
 
                 //Draw Beams
                 foreach (Beam b in theWorld.GetBeams())
@@ -400,9 +405,11 @@ namespace View
                     BeamDrawer(e, b, theWorld.GetSize(), b.GetOrg().GetX() - 30, b.GetOrg().GetY() - 30, b.GetDir().ToAngle() - 90);
                 }
 
+
+                //Draw all tanks
                 foreach (Tank t in theWorld.GetTanks())
                 {
-                    
+                    //Draw the tank base
                         bdir = t.Getbdir();
                         if (bdir.GetX() == 1)
                             DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX() + 30, t.GetLoc().GetY()-30, 90, TankDrawer);
@@ -415,8 +422,10 @@ namespace View
 
                         else DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX() + 30, t.GetLoc().GetY() + 30, 180, TankDrawer);
 
+                        //Draw the tank turret
                         TurretDrawer(e, t, theWorld.GetSize(), t.GetLoc().GetX()-30, t.GetLoc().GetY()-30, t.Gettdir().ToAngle());
 
+                        //Draw the tank's stats
                         DrawObjectWithTransform(e, t, theWorld.GetSize(), t.GetLoc().GetX()-30, t.GetLoc().GetY()-40, 0, StatsDrawer);
 
                 }
@@ -431,21 +440,19 @@ namespace View
                 foreach (Wall wall in theWorld.Getwalls())
                 {
 
-
+                    //Get the length of the wall and ensure it is a positive value
                     double length;
                     if (wall.Corner1.GetX() == wall.Corner2.GetX())
                         length = wall.Corner1.GetY() - wall.Corner2.GetY();
 
                     else length = wall.Corner1.GetX() - wall.Corner2.GetX();
 
-
-
                     if (length < 0)
                         length = -length;
 
                     
 
-
+                    //If the wall is vertical, draw it by starting at a y offset equal to length, then increment down to 0 in chunks of 50
                     if (wall.Corner1.GetX() == wall.Corner2.GetX())
                     {
                         while (length > 0)
@@ -460,7 +467,7 @@ namespace View
 
                     }
 
-
+                    //If the wall is horizontal, draw it by starting at an x offset equal to length, then increment down to 0 in chunks of 50
                     else
                     {
                         length += 50;
@@ -484,13 +491,7 @@ namespace View
                     ProjectileDrawer(e, p, theWorld.GetSize(), p.GetLoc().GetX()-30, p.GetLoc().GetY()-30, p.GetDir().ToAngle());
                 }
 
-                
-
-
             }
-
-
-
 
             // Do anything that Panel (from which we inherit) needs to do
             base.OnPaint(e);
