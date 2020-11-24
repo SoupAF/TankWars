@@ -27,6 +27,9 @@ namespace View
 
         private GameController.GameController controller;
 
+        /// <summary>
+        /// Sets up the GamePanel and initializes all the field that need initializing.
+        /// </summary>
         public GameWindow()
         {
             // 
@@ -57,6 +60,12 @@ namespace View
             InitializeComponent();
         }
 
+        /// <summary>
+        /// This method recieves if an error occured and displays it onto the form in our error text box
+        /// telling the consumer what went wrong.
+        /// It also re enables the connection tools to attempt to connect to another server.
+        /// </summary>
+        /// <param name="message"></param>
         public void HandleError(string message)
         {
             MethodInvoker i = new MethodInvoker(() => ErrorBox.Text = message);
@@ -66,7 +75,10 @@ namespace View
             AddresBox.Enabled = true;
         }
        
-
+        /// <summary>
+        /// This method updates the drawing panel everytime that the server is updated.
+        /// </summary>
+        /// <param name="w"></param>
         public void UpdateWorld(World w)
         {
 
@@ -79,6 +91,13 @@ namespace View
             catch (Exception) { }
         }
 
+        /// <summary>
+        /// This occurs when the ConnectButton is clicked and starts the game sending focus to the GamePanel for instant action
+        /// into the game.
+        /// While disabling the connecting features to ensure button presses don't accidentally cause the GamePanel to lose focus.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void ConnectButton_Click(object sender, EventArgs e)
         {
             startConnect(AddresBox.Text, NameBox.Text);
@@ -88,6 +107,11 @@ namespace View
             AddresBox.Enabled = false;
         }
 
+        /// <summary>
+        /// When one of the movement keys are pressed this method sends to the GameController what direction the tank will be going.
+        /// </summary>
+        /// <param name="o"></param>
+        /// <param name="e"></param>
         private void GameWindow_KeyDown(object o, KeyEventArgs e)
         {
             if (e.KeyCode == Keys.A)
@@ -111,6 +135,12 @@ namespace View
             }
         }
 
+        /// <summary>
+        /// When either the right or left mouse button is clicked this method tells the game controller that the main player tank
+        /// wants to shoot a normal projectile (left click) or beam (right click).
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GamePanel_MouseDown(object sender, MouseEventArgs e)
         {
             if (e.Button == MouseButtons.Left)
@@ -119,11 +149,21 @@ namespace View
                 controller.Shoot("alt");
         }
 
+        /// <summary>
+        /// When the mouse button is released it tells the GameController that the tank is no longer shooting.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GamePanel_MouseUp(object sender, MouseEventArgs e)
         {
             controller.Shoot("none");
         }
 
+        /// <summary>
+        /// This method records where the mouse is relative to the center of the screen so that the turret can follow the mouse.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GamePanel_MouseMove(object sender, MouseEventArgs e)
         {
             int x = e.X;
@@ -137,6 +177,12 @@ namespace View
             controller.TurretMove(dir);
         }
 
+        /// <summary>
+        /// When a key on the keyboard is released attempts to remove a movement command from our stack that holds onto which way
+        /// the tank should be moving.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="e"></param>
         private void GamePanel_KeyUp(object sender, KeyEventArgs e)
         {
             controller.RemoveMovement(e.KeyValue);
