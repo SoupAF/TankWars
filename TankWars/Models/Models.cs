@@ -107,6 +107,13 @@ namespace Models
             return play.GetID();
         }
 
+        public Object GetTank(int ID)
+        {
+            if (tanks.TryGetValue(ID, out Tank t))
+                return t;
+            else return null;
+        }
+
         public string GetTankColor(int id)
         {
             colors.TryGetValue(id, out string color);
@@ -182,6 +189,14 @@ namespace Models
             lock (this)
             {
                 return new HashSet<Beam>(beams.Values);
+            }
+        }
+
+        public HashSet<Wall> GetWalls()
+        {
+            lock (this)
+            {
+                return new HashSet<Wall>(walls.Values);
             }
         }
 
@@ -274,14 +289,14 @@ namespace Models
     {
         [JsonProperty(PropertyName = "tank")]
         private int tank;
-        [JsonProperty(PropertyName = "name")]
-        private string name;
         [JsonProperty(PropertyName = "loc")]
         private Vector2D loc;
         [JsonProperty(PropertyName = "bdir")]
         private Vector2D bdir;
         [JsonProperty(PropertyName = "tdir")]
         private Vector2D tdir;
+        [JsonProperty(PropertyName = "name")]
+        private string name;
         [JsonProperty(PropertyName = "score")]
         private int score;
         [JsonProperty(PropertyName = "hp")]
@@ -290,14 +305,19 @@ namespace Models
         private bool died;
         [JsonProperty(PropertyName = "dc")]
         private bool dc;
-        [JsonProperty(PropertyName = "joined")]
-        private bool joined;
+        [JsonProperty(PropertyName = "join")]
+        private bool join;
+
+        private Vector2D movement;
+        
 
         /// <summary>
         /// Sets up default for each tank.
         /// </summary>
         /// <param name="Name"></param>
         /// <param name="ID"></param>
+        /// 
+        [JsonConstructor]
         public Tank(string Name, int ID)
         {
             tank = ID;
@@ -306,7 +326,7 @@ namespace Models
             hp = 3;
             died = false;
             dc = false;
-            joined = true;
+            join = true;
 
             if (ID == -1) 
             {
@@ -314,6 +334,22 @@ namespace Models
                 bdir = new Vector2D(0, 0);
                 tdir = new Vector2D(0, 0);
             }
+
+        }
+
+        public Tank(string Name, int ID, int health, Vector2D Loc)
+        {
+            tank = ID;
+            name = Name;
+            score = 0;
+            hp = health;
+            died = false;
+            dc = false;
+            join = true;
+            loc = Loc;
+            tdir = new Vector2D(0, 1);
+            bdir = new Vector2D(0, 1);
+
 
         }
 
@@ -371,6 +407,20 @@ namespace Models
         {
             return died;
         }
+
+        public bool IsJoined()
+        {
+            return join;
+        }
+
+        public void SetJoined(bool val)
+        {
+            this.join = val;
+        }
+
+       
+
+        
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -463,6 +513,14 @@ namespace Models
         private Vector2D p1;
         [JsonProperty(PropertyName = "p2")]
         private Vector2D p2;
+
+        public Wall(int x1, int y1, int x2, int y2, int ID)
+        {
+            p1 = new Vector2D(x1, y1);
+            p2 = new Vector2D(x2, y2);
+            wall = ID;
+        }
+
 
         public int GetID()
         {

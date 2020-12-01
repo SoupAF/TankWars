@@ -17,6 +17,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "DrawingPanel", "DrawingPane
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Vector2D", "Vector2D\Vector2D.csproj", "{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Server", "Server\Server.csproj", "{DC6BD3A6-4820-40B1-8209-67133D806F19}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -50,6 +52,10 @@ Global
 		{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{D43E106E-76FD-4D79-9A45-E29C5F4DAA1C}.Release|Any CPU.Build.0 = Release|Any CPU
+		{DC6BD3A6-4820-40B1-8209-67133D806F19}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{DC6BD3A6-4820-40B1-8209-67133D806F19}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{DC6BD3A6-4820-40B1-8209-67133D806F19}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{DC6BD3A6-4820-40B1-8209-67133D806F19}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
