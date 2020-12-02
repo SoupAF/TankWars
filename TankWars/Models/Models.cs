@@ -282,6 +282,19 @@ namespace Models
             return deadTanks[id];
         }
 
+
+        public void RemoveProj(int id)
+        {
+            bullets.Remove(id);
+        }
+
+
+
+        public void AddScore(int id)
+        {
+            tanks[id].IncrementScore();
+
+        }
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -418,9 +431,20 @@ namespace Models
             this.join = val;
         }
 
-       
+        public void TakeHit()
+        {
+            hp--;
+            if (hp == 0)
+                died = true;
+        }
 
-        
+        public void IncrementScore()
+        {
+            score++;
+        }
+
+
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -458,6 +482,15 @@ namespace Models
         [JsonProperty(PropertyName = "owner")]
         private int owner;
 
+
+        public Projectile(int Id, int Owner, Vector2D Loc, Vector2D Dir)
+        {
+            proj = Id;
+            owner = Owner;
+            loc = Loc;
+            dir = Dir;
+        }
+
         public int GetOwner()
         {
             return owner;
@@ -473,6 +506,21 @@ namespace Models
         public Vector2D GetDir()
         {
             return dir;
+        }
+
+        public bool GetDied()
+        {
+            return died;
+        }
+
+        public void SetDied(bool Died)
+        {
+            died = Died;
+        }
+
+        public void SetLoc(Vector2D Loc)
+        {
+            loc = Loc;
         }
     }
 

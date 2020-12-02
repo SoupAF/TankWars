@@ -38,7 +38,7 @@ namespace Server
             Thread t = new Thread(server.UpdateClients);
             t.Start();
 
-            while(true)
+            while (true)
                 Console.Read();
 
         }
@@ -105,7 +105,7 @@ namespace Server
                                                 reader.Read();
                                                 data = reader.Value.Trim();
                                             }
-                                            
+
                                             x1 = int.Parse(reader.Value);
                                             reader.Read();
                                             data = reader.Value.Trim();
@@ -198,7 +198,7 @@ namespace Server
 
         private void AcceptClient(SocketState state)
         {
-            lock(players)
+            lock (players)
                 players.Add(state, new Player(state, players.Count));
 
             state.OnNetworkAction = Handshake;
@@ -209,21 +209,21 @@ namespace Server
         {
             string name = state.GetData();
             name = name.Trim();
-            if(name.Length > 16)
+            if (name.Length > 16)
                 name = name.Substring(0, 16);
 
             Console.WriteLine("Player " + name + " is connected");
 
-            Tank t = new Tank(name, players.Count - 1, MaxHealth, new Vector2D(450, 450));
+            Tank t = new Tank(name, players.Count - 1, MaxHealth, new Vector2D(450, 500));
 
-            lock(theWorld)
+            lock (theWorld)
                 theWorld.AddPlayer(t);
 
             Networking.Send(state.TheSocket, (players.Count - 1).ToString() + "\n" + (theWorld.GetSize()).ToString() + "\n");
 
 
             string walls = "";
-            foreach(Wall w in theWorld.GetWalls())
+            foreach (Wall w in theWorld.GetWalls())
             {
                 walls += JsonConvert.SerializeObject(w);
                 walls += "\n";
@@ -239,7 +239,7 @@ namespace Server
             string data = state.GetData();
             int index = data.IndexOf('\n');
             string command = "";
-            if(index > 0)
+            if (index > 0)
                 command = data.Substring(0, index);
             data = data.Substring(index + 1);
 
@@ -247,43 +247,73 @@ namespace Server
 
             players.TryGetValue(state, out Player p);
             Tank t = theWorld.GetTank(p.GetID()) as Tank;
-            t.Changetdir(movement.tdir);
+            if(t != null)
+                t.Changetdir(movement.tdir);
 
             Vector2D dir = new Vector2D(0, 0);
-            
-                switch (movement.moving)
-                {
-                    case "up":
-                        dir = new Vector2D(0, -1);
-                        t.Changebdir(dir);
-                        break;
 
-                    case "down":
-                        dir = new Vector2D(0, 1);
-                        t.Changebdir(dir);
+            switch (movement.moving)
+            {
+                case "up":
+                    dir = new Vector2D(0, -1);
+                    t.Changebdir(dir);
                     break;
 
-                    case "right":
-                       dir = new Vector2D(1, 0);
+                case "down":
+                    dir = new Vector2D(0, 1);
+                    t.Changebdir(dir);
+                    break;
+
+                case "right":
+                    dir = new Vector2D(1, 0);
                     t.Changebdir(dir);
 
                     break;
 
-                    case "left":
-                        dir = new Vector2D(-1, 0);
+                case "left":
+                    dir = new Vector2D(-1, 0);
                     t.Changebdir(dir);
 
                     break;
 
-                    case "none":
-                        dir = new Vector2D(0, 0);
-                        break;
-                }
-            
+                case "none":
+                    dir = new Vector2D(0, 0);
+                    break;
+            }
+
+
             t.ChangeLoc(t.GetLoc() + dir * TankSpeed);
 
+            foreach (Tank tank in theWorld.GetTanks())
+            {
+                if (tank.GetLoc() != t.GetLoc())
+                {
+                    if (CheckForCollision(t, tank))
+                        t.ChangeLoc(t.GetLoc() - dir * TankSpeed);
+                }
+            }
+
+            foreach (Wall w in theWorld.GetWalls())
+            {
+                if (CheckForCollision(t, w))
+                    t.ChangeLoc(t.GetLoc() - dir * TankSpeed);
+            }
+
+            object o = null;
+            if(movement.fire == "main" && p.LastFired <= 0)
+            {
+                players[state].LastFired = FramesPerShot;
+
+                o = new Projectile(theWorld.GetProjectiles().Count, p.ID, t.GetLoc(), t.Gettdir());
+
+            }
+
             lock (theWorld)
+            {
+                if (o is Projectile)
+                    theWorld.AddProj(o as Projectile);
                 theWorld.UpdateTank(t);
+            }
 
 
 
@@ -298,8 +328,13 @@ namespace Server
             {
                 Thread.Sleep(MSPerFrame);
 
+
+
                 lock (theWorld)
                 {
+
+                    
+
                     string data = "";
                     foreach (Tank t in theWorld.GetTanks())
                     {
@@ -310,24 +345,235 @@ namespace Server
                             t.SetJoined(false);
                     }
 
-                    //foreach(Projectile p in )
+                    foreach (Projectile p in theWorld.GetProjectiles()) 
+                    {
+                        if (!p.GetDied())
+                        {
+                            
+                            Vector2D dir = p.GetDir();
+                            dir = dir * ProjSpeed;
+                            p.SetLoc(p.GetLoc() + dir);
+                            if (CheckForProjectileCollision(p))
+                            {
+                                theWorld.RemoveProj(p.GetID());
+                                
+                            }
+                            data += JsonConvert.SerializeObject(p);
+                            data += "\n";
+
+                        }
+                        
+                    }
 
 
                     foreach (Player p in players.Values)
+                    {
                         Networking.Send(p.state.TheSocket, data);
+                        p.LastFired--;
+                    }
                 }
             }
 
-            
+
         }
+
+        private bool CheckForCollision(object o1, object o2)
+        {
+            int x1 = 0;
+            int x2 = 0;
+            int y1 = 0;
+            int y2 = 0;
+            int o2x1 = 0;
+            int o2x2 = 0;
+            int o2y1 = 0;
+            int o2y2 = 0;
+
+            if (o1 is Tank)
+            {
+                x1 = (int)(o1 as Tank).GetLoc().GetX() + 30;
+                x2 = (int)(o1 as Tank).GetLoc().GetX() - 30;
+
+                y1 = (int)(o1 as Tank).GetLoc().GetY() + 30;
+                y2 = (int)(o1 as Tank).GetLoc().GetY() - 30;
+            }
+
+            if (o2 is Tank)
+            {
+                o2x1 = (int)(o2 as Tank).GetLoc().GetX() + 30;
+                o2x2 = (int)(o2 as Tank).GetLoc().GetX() - 30;
+
+                o2y1 = (int)(o2 as Tank).GetLoc().GetY() + 30;
+                o2y2 = (int)(o2 as Tank).GetLoc().GetY() - 30;
+            }
+
+            if (o1 is Projectile)
+            {
+                x1 = (int)(o1 as Projectile).GetLoc().GetX();
+                x2 = (int)(o1 as Projectile).GetLoc().GetX();
+
+                y1 = (int)(o1 as Projectile).GetLoc().GetY();
+                y2 = (int)(o1 as Projectile).GetLoc().GetY();
+            }
+
+            if (o2 is Projectile)
+            {
+                o2x1 = (int)(o2 as Projectile).GetLoc().GetX();
+                o2x2 = (int)(o2 as Projectile).GetLoc().GetX();
+
+                o2y1 = (int)(o2 as Projectile).GetLoc().GetY();
+                o2y2 = (int)(o2 as Projectile).GetLoc().GetY();
+            }
+
+            if (o1 is Wall)
+            {
+                if((o1 as Wall).Corner1.GetX() == (o1 as Wall).Corner2.GetX())
+                {
+                    x1 = (int)(o1 as Wall).Corner1.GetX() - 25;
+                    x2 = (int)(o1 as Wall).Corner2.GetX() + 25;
+
+                    if(y1 > 0)
+                        y1 = (int)(o1 as Wall).Corner1.GetY() - 25;
+                    else y1 = (int)(o1 as Wall).Corner1.GetY() + 25;
+
+                    if(y2 > 0)
+                        y2 = (int)(o1 as Wall).Corner2.GetY() + 25;
+                    else y2 = (int)(o1 as Wall).Corner2.GetY() - 25;
+                }
+
+                else
+                {
+                    y1 = (int)(o1 as Wall).Corner1.GetY() - 25;
+                    y2 = (int)(o1 as Wall).Corner2.GetY() + 25;
+
+                    if (x1 > 0)
+                        x1 = (int)(o1 as Wall).Corner1.GetX() - 25;
+                    else x1 = (int)(o1 as Wall).Corner1.GetX() + 25;
+
+                    if (x2 > 0)
+                        x2 = (int)(o1 as Wall).Corner2.GetX() + 25;
+                    else x2 = (int)(o1 as Wall).Corner2.GetX() - 25;
+                }
+                
+            }
+
+            if (o2 is Wall)
+            {
+                if ((o2 as Wall).Corner1.GetX() == (o2 as Wall).Corner2.GetX())
+                {
+                    o2x1 = (int)(o2 as Wall).Corner1.GetX() - 25;
+                    o2x2 = (int)(o2 as Wall).Corner2.GetX() + 25;
+
+                    o2y1 = (int)(o2 as Wall).Corner1.GetY();
+                    if (o2y1 > 0)
+                        o2y1 = (int)(o2 as Wall).Corner1.GetY() + 25;
+                    else o2y1 = (int)(o2 as Wall).Corner1.GetY() - 25;
+
+                    o2y2 = (int)(o2 as Wall).Corner2.GetY();
+                    if (o2y2 > 0)
+                        o2y2 = (int)(o2 as Wall).Corner2.GetY() - 25;
+                    else o2y2 = (int)(o2 as Wall).Corner2.GetY() + 25;
+                }
+
+                else
+                {
+                    o2y1 = (int)(o2 as Wall).Corner1.GetY() - 25;
+                    o2y2 = (int)(o2 as Wall).Corner2.GetY() + 25;
+
+                    o2x1 = (int)(o2 as Wall).Corner1.GetX();
+                    if (o2x1 > 0)
+                        o2x1 = (int)(o2 as Wall).Corner1.GetX() + 25;
+                    else o2x1 = (int)(o2 as Wall).Corner1.GetX() - 25;
+
+                    o2x2 = (int)(o2 as Wall).Corner2.GetX();
+                    if (o2x2 > 0)
+                        o2x2 = (int)(o2 as Wall).Corner2.GetX() - 25;
+                    else o2x2 = (int)(o2 as Wall).Corner2.GetX() + 25;
+                }
+            }
+
+            if(o1 is Tank)
+            {
+                if ((o1 as Tank).IsDead())
+                    return false;
+            }
+
+            if (o2 is Tank)
+            {
+                if ((o2 as Tank).IsDead())
+                    return false;
+            }
+
+            //If the coordinates of either object intersect with the other object
+            if ((o2x1 >= x1 && o2x1 <= x2) || (o2x1 <= x1 && o2x1 >= x2))
+            {
+                if (((o2y1 >= y1 && o2y1 <= y2) || (o2y1 <= y1 && o2y1 >= y2)) || ((o2y2 >= y1 && o2y2 <= y2) || (o2y2 <= y1 && o2y2 >= y2)))
+                    return true;
+            }
+            if ((o2x2 >= x1 && o2x2 <= x2) || (o2x2 <= x1 && o2x2 >= x2))
+            {
+                if (((o2y1 >= y1 && o2y1 <= y2) || (o2y1 <= y1 && o2y1 >= y2)) || ((o2y2 >= y1 && o2y2 <= y2) || (o2y2 <= y1 && o2y2 >= y2)))
+                    return true;
+            }
+
+            if ((x1 >= o2x1 && x1 <= o2x2) || (x1 <= o2x1 && x1 >= o2x2))
+            {
+                if (((y1 >= o2y1 && y1 <= o2y2) || (y1 <= o2y1 && y1 >= o2y2)) || ((y2 >= o2y1 && y2 <= o2y2) || (y2 <= o2y1 && y2 >= o2y2)))
+                    return true;
+            }
+            if ((x2 >= o2x1 && x2 <= o2x2) || (x2 <= o2x1 && x2 >= o2x2))
+            {
+                if (((y1 >= o2y1 && y1 <= o2y2) || (y1 <= o2y1 && y1 >= o2y2)) || ((y2 >= o2y1 && y2 <= o2y2) || (y2 <= o2y1 && y2 >= o2y2)))
+                    return true;
+            }
+
+            return false;
+        }
+
+
+        private bool CheckForProjectileCollision(Projectile p)
+        {
+            
+            foreach(Wall w in theWorld.GetWalls())
+            {
+                if (CheckForCollision(p, w))
+                {
+                    p.SetDied(true);
+                    
+                }
+            }
+
+            lock (theWorld) 
+            { 
+                foreach(Tank t in theWorld.GetTanks())
+                {
+                    if (CheckForCollision(p, t) && p.GetOwner() != t.GetID())
+                    {
+                        p.SetDied(true);
+                        
+                        t.TakeHit();
+                        if (t.IsDead())
+                            theWorld.AddScore(p.GetOwner());
+                    }
+
+                    
+                }
+            }
+
+            if (p.GetDied())
+                return true;
+            else return false;
+        }
+
+
+
 
         private class Player
         {
-            private int LastFired;
-            private int NumPowerups;
+            public int LastFired;
+            public int NumPowerups;
             public SocketState state;
             public int ID;
-            
+
 
 
             public Player(SocketState State, int id)
