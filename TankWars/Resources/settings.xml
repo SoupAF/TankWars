@@ -8,7 +8,7 @@
   <ProjSpeed>25</ProjSpeed>
   <TankSpeed>7</TankSpeed>
   <MaxPowerups>2</MaxPowerups>
-  <PowerupDelay>1650</PowerupDelay>
+  <PowerupDelay>60</PowerupDelay>
 
   <!-- top border -->
   <Wall>
@@ -69,12 +69,30 @@
       <y>-425</y>
     </p2>
   </Wall>
-
+  <Wall>
+    <p1>
+      <x>-425</x>
+      <y>-425</y>
+    </p1>
+    <p2>
+      <x>-425</x>
+      <y>-275</y>
+    </p2>
+  </Wall>
   
 
 
   <!-- upper right 'L' piece -->
- 
+  <Wall>
+    <p1>
+      <x>425</x>
+      <y>-425</y>
+    </p1>
+    <p2>
+      <x>275</x>
+      <y>-425</y>
+    </p2>
+  </Wall>
 
   <Wall>
     <p1>
@@ -136,52 +154,7 @@
   </Wall>
 
 
-  <!-- bottom innermost wall -->
-  <Wall>
-    <p1>
-      <x>-50</x>
-      <y>-275</y>
-    </p1>
-    <p2>
-      <x>50</x>
-      <y>-275</y>
-    </p2>
-  </Wall>
-
-  <!-- top innermost wall -->
-  <Wall>
-    <p1>
-      <x>-50</x>
-      <y>275</y>
-    </p1>
-    <p2>
-      <x>50</x>
-      <y>275</y>
-    </p2>
-  </Wall>
-
-  <!-- left innermost wall -->
-  <Wall>
-    <p1>
-      <x>-225</x>
-      <y>-50</y>
-    </p1>
-    <p2>
-      <x>-225</x>
-      <y>50</y>
-    </p2>
-  </Wall>
-  <!-- right innermost wall -->
-  <Wall>
-    <p1>
-      <x>225</x>
-      <y>-50</y>
-    </p1>
-    <p2>
-      <x>225</x>
-      <y>50</y>
-    </p2>
-  </Wall>
+  
 
   <!-- left bunker -->
   <Wall>

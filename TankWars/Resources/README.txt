@@ -1,12 +1,11 @@
-﻿Issues: When holding two movement keys, and the first key is released, the tank will pause for a frame before continuing to move in the direction of the second key.
+﻿Issues: Sometimes when many players are on the server at once, there can be issues with firing at a consitent speed. The game will instead fire at an uneven pace
+This is probably due to some sort of issue where the server is too slow to handle many projectiles at once.
 
+We decided to create a player class in order to keep track of things like tank ids, socket states, and the fire rate delays. This object is stored by the server until a player diosconnects.
 
-We decided to have the movement keys be stored in a stack. When a key is pressed, it is added to the satck, and removed when the key is released. 
-When you hold multiple keys, the most recently pressed key goes on top of the stack, and only the top value on the stack is sent as a control command to the server.
+There are no additional features added due to time restrictions. 
 
-The draw methods for projectiles, beams, and tank turrets all incorporate parts of DrawObjectWithTrasnform instead of just using that method.
-This is becasue those sprites need to be rotated, and some additional translations need to be made before and after the rotation in order to preserve the sprites location.
+We decided to have the server not print anything into the console, as it is mostly useful for debugging purposes.
 
-The example view program, and the tankwars server all seem to mis-represent the walls as far as we can tell. In the settings file for the server, the innermost right and left wall are defined as 2 segments long.
-The example view program and the tankwars.eng.utah.edu server all treat these walls as if they are 3 segments long, which is incorrect as far as we can see. Out program treats these walls as 2 segments long.
-
+The server can read settings from files, but they must be called "settings.xml" and it must be located in the Resources folder of the solution. 
+It is capable of reading all game settings from the file, but it only requires world size, frame rate, frames per shot, and respwan rate to be defined in the file. The rest will set itself to default values if not included.

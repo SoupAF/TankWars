@@ -46,7 +46,7 @@ namespace Models
             deadTanks = new Dictionary<int, Tank>();
             colorCounter = 1;
             //Makes the player a temporary tank on the first set up just for holding purposes.
-            player = new Tank("default", -1);
+            player = new Tank("default", -1, 0);
         }
 
         public int GetSize()
@@ -146,10 +146,10 @@ namespace Models
             return beam.GetID();
         }
 
-        public int AddPowerup(Powerup power) 
+        public int AddPowerup(Powerup power)
         {
-            if(!powerups.ContainsKey(power.GetID()))
-            powerups.Add(power.GetID(), power);
+            if (!powerups.ContainsKey(power.GetID()))
+                powerups.Add(power.GetID(), power);
             return power.GetID();
         }
 
@@ -168,7 +168,7 @@ namespace Models
             return player;
         }
 
-        public HashSet<Tank> GetTanks() 
+        public HashSet<Tank> GetTanks()
         {
             lock (this)
             {
@@ -176,7 +176,7 @@ namespace Models
             }
         }
 
-        public HashSet<Projectile> GetProjectiles() 
+        public HashSet<Projectile> GetProjectiles()
         {
             lock (this)
             {
@@ -206,10 +206,10 @@ namespace Models
             {
                 return new HashSet<Powerup>(powerups.Values);
             }
-            
+
         }
 
-        public HashSet<int> GetTankIds() 
+        public HashSet<int> GetTankIds()
         {
             lock (this)
             {
@@ -251,7 +251,7 @@ namespace Models
             tanks.Remove(id);
         }
 
-        public void KillTank(int id, Tank t) 
+        public void KillTank(int id, Tank t)
         {
             deadTanks.Add(id, t);
         }
@@ -288,13 +288,27 @@ namespace Models
             bullets.Remove(id);
         }
 
-
-
         public void AddScore(int id)
         {
             tanks[id].IncrementScore();
 
         }
+
+        public void RemovePowerup(int id)
+        {
+            powerups.Remove(id);
+        }
+
+        public Powerup GetPowerup(int id)
+        {
+            return powerups[id];
+        }
+
+        public void RemoveBeam(int id)
+        {
+            beams.Remove(id);
+        }
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -322,7 +336,9 @@ namespace Models
         private bool join;
 
         private Vector2D movement;
-        
+        private int powerups;
+        private int RespawnTimer;
+
 
         /// <summary>
         /// Sets up default for each tank.
@@ -331,7 +347,7 @@ namespace Models
         /// <param name="ID"></param>
         /// 
         [JsonConstructor]
-        public Tank(string Name, int ID)
+        public Tank(string Name, int ID, int delay)
         {
             tank = ID;
             name = Name;
@@ -340,17 +356,20 @@ namespace Models
             died = false;
             dc = false;
             join = true;
+            powerups = 0;
+            RespawnTimer = delay;
+            
 
-            if (ID == -1) 
+            if (ID == -1)
             {
-                loc = new Vector2D(0,0);
+                loc = new Vector2D(0, 0);
                 bdir = new Vector2D(0, 0);
                 tdir = new Vector2D(0, 0);
             }
 
         }
 
-        public Tank(string Name, int ID, int health, Vector2D Loc)
+        public Tank(string Name, int ID, int health, Vector2D Loc, int delay)
         {
             tank = ID;
             name = Name;
@@ -362,6 +381,9 @@ namespace Models
             loc = Loc;
             tdir = new Vector2D(0, 1);
             bdir = new Vector2D(0, 1);
+            powerups = 0;
+            RespawnTimer = delay;
+
 
 
         }
@@ -443,6 +465,55 @@ namespace Models
             score++;
         }
 
+        public int GetPowerups()
+        {
+            return powerups;
+        }
+
+        public void AddPowerup()
+        {
+            powerups++;
+        }
+
+        public void RemovePowerup()
+        {
+            powerups--;
+        }
+
+        public void SetDelay(int delay)
+        {
+            RespawnTimer = delay;
+        }
+
+        public void DecrementTimer()
+        {
+            RespawnTimer--;
+        }
+
+        public int GetTimer()
+        {
+            return RespawnTimer;
+        }
+
+        public void RespawnTank()
+        {
+            died = false;
+        }
+
+        public void HealTank(int health)
+        {
+            hp = health;
+        }
+
+        public void Dissconect()
+        {
+            dc = true;
+        }
+
+        public bool IsDissconnected()
+        {
+            return dc;
+        }
 
 
     }
@@ -457,6 +528,16 @@ namespace Models
         [JsonProperty(PropertyName = "died")]
         private bool died;
 
+
+
+        public Powerup(int id, Vector2D Loc)
+        {
+            power = id;
+            loc = Loc;
+            died = false;
+
+        }
+
         public int GetID()
         {
             return power;
@@ -466,6 +547,22 @@ namespace Models
         {
             return loc;
         }
+
+        public bool IsDead()
+        {
+            return died;
+        }
+
+        public void SetDead(bool dead)
+        {
+            died = dead;
+        }
+
+        public void ChangeLoc(Vector2D Loc)
+        {
+            loc = Loc;
+        }
+
     }
 
     [JsonObject(MemberSerialization.OptIn)]
@@ -536,6 +633,14 @@ namespace Models
         [JsonProperty(PropertyName = "owner")]
         private int owner;
 
+        public Beam(int id, Vector2D start, Vector2D direction, int own)
+        {
+            beam = id;
+            org = start;
+            dir = direction;
+            owner = own;
+        }
+
         public int GetID()
         {
             return beam;
@@ -589,10 +694,10 @@ namespace Models
             get { return p2; }
             set { }
         }
-       
 
-        
+
+
     }
 
-    
+
 }
